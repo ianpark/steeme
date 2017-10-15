@@ -1,0 +1,6 @@
+.hardshell {
+    white-space: -moz-pre-wrap; /* Firefox */
+    white-space: -o-pre-wrap; /* Opera */
+    white-space: nowrap; /* Chrome */
+    word-wrap: break-word; /* IE */
+}
