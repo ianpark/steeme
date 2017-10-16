@@ -52,6 +52,7 @@ class Posting extends React.Component {
             search_keyword: ''
         }
         this.download = this.download.bind(this);
+        this.detailPopup = this.detailPopup.bind(this);
     }
 
     download() {
@@ -69,6 +70,18 @@ class Posting extends React.Component {
         a[0].click();
         window.URL.revokeObjectURL(url);
         a.remove();
+    }
+
+    detailPopup(type, index) {
+        /*
+        if (type == 'resteem') {
+            $('#show_detail_area').text(this.props.posts[index].reblogged_by.join(' '));
+            $('#show_detail').modal();
+        } else if (type == 'vote') {
+            $('#show_detail_area').text('voters');
+            $('#show_detail').modal();
+        }
+        */
     }
     
     handleChange(e) {
@@ -100,10 +113,10 @@ class Posting extends React.Component {
                 {posts.map((post ,index) =>
                 <tr key={index}>
                     <td><a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a></td>
-                    <td>{post.net_votes}</td>
+                    <td onClick={() => this.detailPopup('vote', index)}>{post.net_votes}</td>
                     <td>{post.children}</td>
                     <td>{post.payout.toFixed(2)}</td>
-                    <td data-toggle="tooltip">{post.reblogged_by.length}</td>
+                    <td onClick={() => this.detailPopup('resteem', index)}>{post.reblogged_by.length}</td>
                     <td className="hardshell">{post.created.split('T')[0]}</td>
                 </tr>
                 )}
@@ -272,10 +285,6 @@ class LineChart extends React.Component {
             // Configuration options go here
             options: {
                 responsive: true,
-                title:{
-                    display: true,
-                    text: this.props.title
-                },
                 tooltips: {
                     mode: 'index',
                     intersect: false,
@@ -322,8 +331,11 @@ class Statistics extends React.Component {
     render() {
       return (
         <div className="container" style={{width: '100%'}}>
+            <h3>Voting per post</h3>
             <LineChart chart_id="vote_chart" color="rgb(255, 99, 132)" title="Voting per post" value_name="Voting" labels={this.state.labels} records={this.state.votes} />
+            <h3>Comments per post</h3>
             <LineChart chart_id="comment_chart" color="rgb(54, 162, 235)" title="Comments per post" value_name="Comments" labels={this.state.labels} records={this.state.comments} />
+            <h3>SBD per post</h3>
             <LineChart chart_id="reword_chart" color="rgb(75, 192, 192)" title="SBD per post" value_name="SBD" labels={this.state.labels} records={this.state.sbd} />
         </div>
       );
@@ -368,7 +380,7 @@ class Summary extends React.Component {
         var p = this.props.posts;
         return (
             <div className="container" style={{width: '100%'}}>
-                <h3>@{this.props.userId}</h3>
+                <h3>About @{this.props.userId}</h3>
                 <div className="alert alert-success" role="alert">
                     <p>Total Posts: {this.state.total_post}</p>
                     <p>Total Reward: {this.state.total_sbd.toFixed(2)} SBD</p>
@@ -405,16 +417,32 @@ class Summary extends React.Component {
     }
 }
 
+
+
 class PostingAnalyser extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
-          posts: JSON.parse(localStorage.getItem("my_steemit_post")) || [],
+          posts: this.getSavedPosting(),
           userId: localStorage.getItem("my_steemit_id") || ''
       }
       this.onUserAssigned = this.onUserAssigned.bind(this);
       this.get_post = this.get_post.bind(this);
       this.save_posts = this.save_posts.bind(this);
+    }
+
+    getSavedPosting() {
+        var saved_posting = localStorage.getItem("my_steemit_post");
+        if (saved_posting && saved_posting.length > 0) {
+            return JSON.parse(LZString.decompressFromUTF16(saved_posting))
+        }
+        return [];
+    }
+
+    savePosting() {
+        localStorage.setItem(
+            "my_steemit_post",
+            LZString.compressToUTF16(JSON.stringify(window.steemit_posts)));
     }
 
     onUserAssigned(user) {
@@ -446,8 +474,8 @@ class PostingAnalyser extends React.Component {
                     if (!in_progress) {
                         console.log('Fully loaded');
                         try {
-                        localStorage.setItem("my_steemit_post", JSON.stringify(window.steemit_posts));
-                        localStorage.setItem("my_steemit_id", window.steemit_user);
+                            this.savePosting(window.steemit_posts);
+                            localStorage.setItem("my_steemit_id", window.steemit_user);
                         } catch (err){
 
                         }
@@ -486,9 +514,9 @@ class PostingAnalyser extends React.Component {
                             <a data-toggle="tab" href="#menu_list">Posts</a>
                         </li>
                         <li>
-                            <a data-toggle="tab" href="#menu_stat">Charts</a>
+                            <a data-toggle="tab" href="#menu_stat">Trends</a>
                         </li>
-                        <li><a data-toggle="tab" href="#menu_voting">Voting</a></li>
+                        <li><a data-toggle="tab" href="#menu_voting">Votes</a></li>
                     </ul>
                     <div className="tab-content">
                         <div id="summary" className="tab-pane fade in active">
@@ -508,7 +536,7 @@ class PostingAnalyser extends React.Component {
             }
             <h1> </h1>
             <pre>
-                Created by <a href="http://steemit.com/@asbear">@asbear</a>
+                Steem Me v0.1, created by <a href="http://steemit.com/@asbear">@asbear</a>
             </pre>
         </div>
       );

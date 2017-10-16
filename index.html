@@ -8,6 +8,7 @@
 <script src="https://fb.me/react-dom-15.0.0.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
 
 <div id="main_panel"></div>
@@ -27,120 +28,22 @@
         </div>
       </div>
     </div>
-  </div>
+</div>
+
+<div class="modal" id="show_detail" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+            <div id='show_detail_area'>aa</div>
+        </div>
+      </div>
+    </div>
+</div>
 
 
 
 <script>
-
-steem.api.setWebSocket('wss://steemd-int.steemit.com');
-
-/*
-var my_steemit_post = JSON.parse(localStorage.getItem("my_steemit_post")) || [];  //
-function get_post(last_post) {
-    if (localStorage.getItem("my_steemit_post")) {
-        done();
-        return;
-    }
-    steem.api.getDiscussionsByAuthorBeforeDate(
-        'asbear',
-        last_post?last_post.permlink: '',
-        last_post?last_post.active: '2030-01-01T00:00:00',
-        100,
-        function (err, result) {
-            if (result.length > 1) {
-                my_steemit_post.push.apply(my_steemit_post, result);
-                get_post(result[result.length-1])
-            } else {
-                done();
-            }
-        }
-    );
-}
-function done() {
-    localStorage.setItem("my_steemit_post", JSON.stringify(my_steemit_post));
-    show_posting_list();
-}
-
-function show_posting_list() {
-    $('#post_list').html('');
-    var table = $("<table/>", {class: 'table'});
-    table.append(
-            $("<tr><td>제목</td><td>보팅</td><td>댓글</td><td>보상</td></tr>"));
-    my_steemit_post.forEach(function(post) {
-        table.append(
-            $("<tr/>")
-            .append($('<td/>').text(post.title))
-            .append($('<td/>').text(post.net_votes))
-            .append($('<td/>').text(post.children))
-            .append($('<td/>').text(post.total_payout_value))
-        );
-    });
-    $('#post_list').append(table);
-}
-
-function saveFile (name, type, data) {
-    if (data != null && navigator.msSaveBlob)
-        return navigator.msSaveBlob(new Blob([data], { type: type }), name);
-    var a = $("<a style='display: none;'/>");
-    var url = window.URL.createObjectURL(new Blob([data], {type: type}));
-    a.attr("href", url);
-    a.attr("download", name);
-    $("body").append(a);
-    a[0].click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
-}
-
-function download_all() {
-    saveFile("Example.txt", "data:attachment/text", JSON.stringify(my_steemit_post));
-}
-*/
-//get_post();
-/*
-(function() {
-
-  // call the main function
-  whoUpvotedMe('pilcrow').then(result => {
-    // print the results in the HTML
-    document.getElementById('counter').innerText = JSON.stringify(result, null, 4);
-  });
-
-  function whoUpvotedMe(username) {
-    return steem.api.getDiscussionsByAuthorBeforeDate(username, null, '2100-01-01T00:00:00', 100)
-      .then(posts => {
-          const allUpvoters = getAllUpvoters(posts);
-          return countUpvoters(allUpvoters);
-      });
-  }
-    
-  function getUpvoters(post) {
-      return post.active_votes.map(upvote => upvote.voter);
-  }
-  
-  posts.reduce((all, post) => { return all.concat(post.active_votes.map(upvote => upvote.voter)); }, [])
-  .reduce((upvoteCounts, upvoter) => {
-      upvoteCounts[upvoter] = (upvoteCounts[upvoter] || 0) + 1;
-      return upvoteCounts;
-      },{});
-
-  function getAllUpvoters(posts) {
-    return posts.reduce((all, currentPost) => {
-        const upvoters = getUpvoters(currentPost)
-        return all.concat(upvoters);
-    }, []);
-	}
-  
-  function countUpvoters(allUpvoters) {
-   return allUpvoters.reduce((upvoteCounts, upvoter) => {
-  upvoteCounts[upvoter] = (upvoteCounts[upvoter] || 0) + 1;
-        return upvoteCounts;
-    }, {});
-	}
-})();
-*/
-
+// steem.api.setWebSocket('wss://steemd-int.steemit.com');
 </script>
 
-<script type="text/babel" src="./js/viewer.jsx"></script>
 <script type="text/babel" src="./js/main.jsx"></script>
