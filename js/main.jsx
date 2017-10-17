@@ -433,8 +433,7 @@ class Summary extends React.Component {
     }
 }
 
-
-
+var steemme_version = "0.2";
 class PostingAnalyser extends React.Component {
     constructor(props) {
       super(props);
@@ -446,12 +445,21 @@ class PostingAnalyser extends React.Component {
       this.onUserAssigned = this.onUserAssigned.bind(this);
       this.get_post = this.get_post.bind(this);
       this.save_posts = this.save_posts.bind(this);
+      this.getSavedPosting = this.getSavedPosting.bind(this);
     }
 
     getSavedPosting() {
-        var saved_posting = localStorage.getItem("my_steemit_post");
-        if (saved_posting && saved_posting.length > 0) {
-            return JSON.parse(LZString.decompressFromUTF16(saved_posting))
+        try {
+            if (localStorage.getItem("steemme_version") != steemme_version) {
+                throw "Old data found.";
+            }
+            var saved_posting = localStorage.getItem("my_steemit_post");
+            if (saved_posting && saved_posting.length > 0) {
+                return JSON.parse(LZString.decompressFromUTF16(saved_posting))
+            }
+        } catch (err) {
+            // cleanup
+            localStorage.removeItem("my_steemit_post");
         }
         return [];
     }
@@ -508,6 +516,7 @@ class PostingAnalyser extends React.Component {
                         try {
                             this.savePosting(window.steemit_posts);
                             localStorage.setItem("my_steemit_id", window.steemit_user);
+                            localStorage.setItem("steemme_version", steemme_version);
                         } catch (err){
                             console.log('Failed to load posting data.')
                         }
