@@ -577,7 +577,7 @@ class PostingAnalyser extends React.Component {
             }
             <h1> </h1>
             <pre>
-                Steem Me v0.1, created by <a href="http://steemit.com/@asbear">@asbear</a>
+                Steem Me v0.2, created by <a href="http://steemit.com/@asbear">@asbear</a>
             </pre>
         </div>
       );
