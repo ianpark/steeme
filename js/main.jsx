@@ -38,9 +38,37 @@ class ActionPanel extends React.Component {
         return (
         <div id="action_items">
             <button className="btn btn-warning">Show Posting List</button>
-            <button className="btn btn-success">Download as JSON</button>
+            <button className="btn btn-success"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> JSON</button>
             <button className="btn btn-warning">Full Refresh</button>
         </div>
+        )
+    }
+}
+
+class PostingDetail extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        var p = this.props.post;
+        var vote_list = p.active_votes.map(upvote => [upvote.voter, upvote.sbd]);
+        vote_list.sort(function(a, b) { return b[1] - a[1]; });
+        return (
+            <div>
+                <h3>Voted By</h3>
+                {vote_list.length > 0 ?
+                    vote_list.map((vote, index) =>
+                        <span key={index} className="user_cell"><b>{vote[0]}</b> ${vote[1].toFixed(2)}</span>
+                    ) : (<p>No Comment</p>)
+                }
+                <h3>Resteemed By</h3>
+                {p.reblogged_by.length > 0 ? 
+                    p.reblogged_by.map((id, index) =>
+                    <span key={index} className="user_cell"><b>{id}</b></span>
+                    ) : (<p>No resteem</p>)
+                }
+            </div>
         )
     }
 }
@@ -72,16 +100,12 @@ class Posting extends React.Component {
         a.remove();
     }
 
-    detailPopup(type, index) {
-        /*
-        if (type == 'resteem') {
-            $('#show_detail_area').text(this.props.posts[index].reblogged_by.join(' '));
-            $('#show_detail').modal();
-        } else if (type == 'vote') {
-            $('#show_detail_area').text('voters');
-            $('#show_detail').modal();
-        }
-        */
+    detailPopup(index) {
+        ReactDOM.render(
+            <PostingDetail post={this.props.posts[index]}/>,
+            document.getElementById('show_detail_area')
+        );
+        $('#show_detail').modal();
     }
     
     handleChange(e) {
@@ -90,7 +114,7 @@ class Posting extends React.Component {
     render() {
         var posts = [];
         if (this.state.search_keyword.length > 0) {
-            posts = this.props.posts.filter((post) => post.body.includes(this.state.search_keyword));
+            posts = this.props.posts.filter((post) => post.title.includes(this.state.search_keyword) || post.body.includes(this.state.search_keyword));
         } else {
             posts = this.props.posts;
         }
@@ -98,7 +122,7 @@ class Posting extends React.Component {
         <div className="container" style={{width: '100%'}}>
             <div>
                 <h2>Posting history</h2>
-                <button className="btn btn-success pull-right" onClick={this.download}>Download as JSON</button>
+                <button className="btn btn-success pull-right" onClick={this.download}><span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> JSON</button>
                 <div className="form-group pull-right">
                     <div className="input-group input-group" role="group">
                         <input type="input" onChange={ this.handleChange.bind(this) }  value={this.state.search_keyword} size="20" className="form-control" id="search_keyword" placeholder="search keyword"/>
@@ -107,16 +131,16 @@ class Posting extends React.Component {
             </div>
             <table className='table table-hover table-sm' style={{fontSize: '9pt'}}>
             <thead  style={{fontWeight: 'bold'}}>
-                <tr><td>Title</td><td>Vote</td><td>Comments</td><td>SBD</td><td>Resteem</td><td>Created</td></tr>
+                <tr><td>Title</td><td className='right'>Vote</td><td className='right'>Cmt</td><td className='right'>SBD</td><td className='right'>Rstm</td><td className='right'>Created</td></tr>
             </thead>
             <tbody>
                 {posts.map((post ,index) =>
                 <tr key={index}>
                     <td><a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a></td>
-                    <td onClick={() => this.detailPopup('vote', index)}>{post.net_votes}</td>
-                    <td>{post.children}</td>
-                    <td>{post.payout.toFixed(2)}</td>
-                    <td onClick={() => this.detailPopup('resteem', index)}>{post.reblogged_by.length}</td>
+                    <td className='right link' onClick={() => this.detailPopup(index)}>{post.net_votes}</td>
+                    <td className='right'>{post.children}</td>
+                    <td className='right link' onClick={() => this.detailPopup(index)}>{post.payout.toFixed(2)}</td>
+                    <td className='right link' onClick={() => this.detailPopup(index)}>{post.reblogged_by.length}</td>
                     <td className="hardshell">{post.created.split('T')[0]}</td>
                 </tr>
                 )}
@@ -200,20 +224,12 @@ class Voting extends React.Component {
             'strong_voter': []
         };
     }
+    
     get_voting_stat() {
         var voters = this.props.posts
-        .filter((post) => {
-            if (post.total_payout_value != "0.000 SBD") {
-                post.total_vote_weight = post.active_votes.reduce((sum, voter) => sum + parseInt(voter.weight), 0);
-                return true;
-            }
-            return false;
-        })
         .reduce((all, post) => {
-            var price = parseFloat(post.total_payout_value.split(' ')[0]);
-            var total_weight = post.total_vote_weight;
             return all.concat(post.active_votes.map(upvote => {
-                return [upvote.voter, price * upvote.weight / total_weight]
+                return [upvote.voter, upvote.sbd]
             }));
         }, [])
         .reduce((upvoteCounts, upvote) => {
@@ -383,10 +399,10 @@ class Summary extends React.Component {
                 <h3>About @{this.props.userId}</h3>
                 <div className="alert alert-success" role="alert">
                     <p>Total Posts: {this.state.total_post}</p>
-                    <p>Total Reward: {this.state.total_sbd.toFixed(2)} SBD</p>
                     <p>Total Votes: {this.state.total_vote}</p>
+                    <p>Total Reward: {this.state.total_sbd.toFixed(2)} SBD</p>
                     <p>Total Comments: {this.state.total_comments}</p>
-                    <p>Average Posts: {this.state.average_vote}</p>
+                    <p>Average Votes: {this.state.average_vote}</p>
                     <p>Average Reward: {this.state.average_sbd} SBD</p>
                     <p>Average Comments: {this.state.average_comments}</p>
                     <p>Resteemed: {this.state.total_resteem}</p>
@@ -426,6 +442,7 @@ class PostingAnalyser extends React.Component {
           posts: this.getSavedPosting(),
           userId: localStorage.getItem("my_steemit_id") || ''
       }
+      window.posts = this.state.posts;
       this.onUserAssigned = this.onUserAssigned.bind(this);
       this.get_post = this.get_post.bind(this);
       this.save_posts = this.save_posts.bind(this);
@@ -454,10 +471,17 @@ class PostingAnalyser extends React.Component {
     }
 
     save_posts(err, result) {
-        if (result.length > 1) {
+        if (err || !result || length.length == 0) {
+            window.alert('Failed to load data');
+            return;
+        }
+        var is_fresh = window.steemit_posts.length == 0 ? true : result[0].id != window.steemit_posts[0].id;
+        if (result.length > 1 && is_fresh) {
+            console.log('Posting received: ' + result.length)
             window.steemit_posts.push.apply(window.steemit_posts, result);
             this.get_post(result[result.length-1])
         } else {
+            console.log('Posting is fully received. Start processing. ' + result.length)
             var in_progress = window.steemit_posts.length;
             window.steemit_posts.map(post => {
                 function to_sbd(sbd) {
@@ -468,6 +492,14 @@ class PostingAnalyser extends React.Component {
                 } else {
                     post.payout = to_sbd(post.total_payout_value) + to_sbd(post.curator_payout_value)
                 }
+                // Calculate votings
+                var total_rshares = post.active_votes.reduce((sum, voter) => sum + parseInt(voter.rshares), 0);
+                if (total_rshares) {
+                    post.active_votes.map(upvote => {
+                        upvote.sbd = (post.payout * upvote.rshares / total_rshares);
+                    });
+                }
+
                 steem.api.getRebloggedBy(post.author, post.permlink).then(reblogger => {
                     post.reblogged_by = reblogger.filter(id => post.author != id);
                     --in_progress;
@@ -477,7 +509,7 @@ class PostingAnalyser extends React.Component {
                             this.savePosting(window.steemit_posts);
                             localStorage.setItem("my_steemit_id", window.steemit_user);
                         } catch (err){
-
+                            console.log('Failed to load posting data.')
                         }
                         this.setState({
                             posts: window.steemit_posts,

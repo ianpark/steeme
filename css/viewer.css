@@ -4,3 +4,25 @@
     white-space: nowrap; /* Chrome */
     word-wrap: break-word; /* IE */
 }
+
+.user_cell {
+    display: inline-block;
+    font-size: 9pt;
+    border: 1px solid #a1a1a1;
+    padding: 4px 4px; 
+    background: #eeeeee;
+    border-radius: 25px;
+    margin: 2px;
+}
+
+tr.right {
+    text-align: right;
+}
+
+td.right {
+    text-align: right;
+}
+
+td.link {
+    cursor: pointer;
+}
