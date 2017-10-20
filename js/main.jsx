@@ -327,7 +327,7 @@ class LineChart extends React.Component {
     
     render() {
         return (
-            <canvas id={this.props.chart_id}></canvas>
+            <canvas id={this.props.chart_id} style={{maxHeight: 400}}></canvas>
         )
     }
 }
@@ -355,6 +355,93 @@ class Statistics extends React.Component {
             <LineChart chart_id="reword_chart" color="rgb(75, 192, 192)" title="SBD per post" value_name="SBD" labels={this.state.labels} records={this.state.sbd} />
         </div>
       );
+    }
+}
+
+class Resteem extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    componentDidMount() {
+        var resteem_user = {};
+        this.props.posts.map(post => {
+            post.reblogged_by.map(user_id => {
+                if (resteem_user[user_id]) {
+                    resteem_user[user_id] += 1;
+                } else {
+                    resteem_user[user_id] = 1;
+                }
+            })
+        })
+        var resteem_list = [];
+        for (var user in resteem_user) {
+            resteem_list.push([user, resteem_user[user]]);
+        }
+        resteem_list.sort(function(a, b) { return b[1]-a[1];});
+
+        var ctx = document.getElementById('resteem_rank_canvas').getContext('2d');
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'bar',
+            // The data for our dataset
+            data: {
+                labels: resteem_list.slice(0, 15).map((resteem) => resteem[0]),
+                datasets: [{
+                    label: "Total resteem",
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgb(255, 99, 132)",
+                    data: resteem_list.slice(0, 15).map((resteem) => resteem[1]),
+                    borderWidth: 1
+                }]
+            },
+        
+            // Configuration options go here
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                    }]
+                }
+            }
+        });
+    }
+    render () {
+        var post_set = this.props.posts.slice();
+        post_set.sort(function(a, b) { return b.reblogged_by.length - a.reblogged_by.length});
+
+        return (
+            <div className="container" style={{width: '100%'}}>
+                <h3>Best 15 Resteemers</h3>
+                <div>
+                    <canvas id='resteem_rank_canvas'></canvas>
+                </div>
+                <h3>Best 10 resteemed post</h3>
+                <ul className="list-group">
+                    {post_set.slice(0,10).map((post, idx) =>
+                        <li key={idx} className="list-group-item">
+                        <a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a>
+                        <span className="badge">{post.reblogged_by.length}</span>
+                        </li>)
+                    }
+                </ul>
+            </div>
+        )
     }
 }
 
@@ -433,7 +520,7 @@ class Summary extends React.Component {
     }
 }
 
-var steemme_version = "0.2";
+var steemme_version = "0.3";
 class PostingAnalyser extends React.Component {
     constructor(props) {
       super(props);
@@ -483,10 +570,16 @@ class PostingAnalyser extends React.Component {
             window.alert('Failed to load data');
             return;
         }
+        // Sort each bundle
         var is_fresh = window.steemit_posts.length == 0 ? true : result[0].id != window.steemit_posts[0].id;
         if (result.length > 1 && is_fresh) {
-            console.log('Posting received: ' + result.length)
-            window.steemit_posts.push.apply(window.steemit_posts, result);
+            console.log('Posting received: ' + result.length);
+            result.map(post => {
+                if (window.steemit_posts.length == 0 ||
+                    window.steemit_posts[window.steemit_posts.length-1].created != post.created) {
+                    window.steemit_posts.push(post);
+                }
+            });
             this.get_post(result[result.length-1])
         } else {
             console.log('Posting is fully received. Start processing. ' + result.length)
@@ -536,7 +629,7 @@ class PostingAnalyser extends React.Component {
             window.steemit_user ,
             last_post?last_post.permlink: '',
             last_post?last_post.active: '2030-01-01T00:00:00',
-            100, this.save_posts
+            70, this.save_posts
         );
     }
 
@@ -557,7 +650,12 @@ class PostingAnalyser extends React.Component {
                         <li>
                             <a data-toggle="tab" href="#menu_stat">Trends</a>
                         </li>
-                        <li><a data-toggle="tab" href="#menu_voting">Votes</a></li>
+                        <li>
+                            <a data-toggle="tab" href="#menu_voting">Votes</a>
+                        </li>
+                        <li>
+                            <a data-toggle="tab" href="#menu_resteem">Resteem</a>
+                        </li>
                     </ul>
                     <div className="tab-content">
                         <div id="summary" className="tab-pane fade in active">
@@ -572,12 +670,15 @@ class PostingAnalyser extends React.Component {
                         <div id="menu_voting" className="tab-pane fade">
                             <Voting posts={this.state.posts}/>
                         </div>
+                        <div id="menu_resteem" className="tab-pane fade">
+                            <Resteem posts={this.state.posts}/>
+                        </div>
                     </div>
                 </div>
             }
             <h1> </h1>
             <pre>
-                Steem Me v0.2, created by <a href="http://steemit.com/@asbear">@asbear</a>
+                Steem Me v{steemme_version}, created by <a href="http://steemit.com/@asbear">@asbear</a>
             </pre>
         </div>
       );
