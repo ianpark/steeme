@@ -158,7 +158,7 @@ class Pay extends React.Component {
         var ready = this.state.sender && this.state.receivers && this.state.message && this.state.activeKey;
         return (
             <div className="container" style={{maxWidth: '600px'}}>
-                <h3>Split!</h3>
+                <h3>SteemLit!</h3>
                 { !this.state.inprogress &&
                 <div class="form-horizontal">
                 <div className="input-group">
@@ -245,7 +245,7 @@ class Pay extends React.Component {
                     </div>
                 }
                 <pre>
-                Split! v0.1, created by <a href="http://steemit.com/@asbear">@asbear</a>
+                SteemLit! v0.1, created by <a href="http://steemit.com/@asbear">@asbear</a>
                 </pre>
             </div>
         )
