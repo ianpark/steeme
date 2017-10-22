@@ -26,3 +26,42 @@ td.right {
 td.link {
     cursor: pointer;
 }
+
+img.round-64 {
+    object-fit: cover;
+    border-radius: 50%;
+    width:64px;
+    height:64px;
+}
+
+div.user-console {
+    display: inline-block;
+    text-align: center;
+    margin: 5px;
+}
+
+div.input-group {
+    margin-bottom:5px;
+}
+
+span.reputation {
+    display: inline-block;
+    font-size: 10px;
+    line-height: 16px;
+    padding: 0 3px;
+    margin-left: 2px;
+    margin-right: 2px;
+    background-color: #f8f8f8;
+    border-radius: 50%;
+    border: 1px solid #dadada;
+    color: #8a8a8a; }
+span.receiver-id {
+    font-weight: 600;
+    font-size: 11px;
+    color: #4877bd;
+}
+span.receiver-sbd {
+    font-size: 11px;
+    color: #383838;
+    font-weight: 600;
+}
