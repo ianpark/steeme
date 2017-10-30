@@ -635,7 +635,7 @@ class PostingAnalyser extends React.Component {
 
     render() {
       return (
-        <div className="container" style={{width: '90%', maxWidth: 1000}}>
+        <div className="container" style={{maxWidth: 1000}}>
             <div><h1></h1></div>
             <ControllPanel clickCallback={this.onUserAssigned}/>
             {this.state.posts.length > 0 &&
