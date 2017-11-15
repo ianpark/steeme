@@ -1,4 +1,4 @@
-# steemme
+# Steeme
 Steemit posting analysis tool
 
 I am introducing SteemMe project. SteemMe is my personal project that aims to help the Steemians to discover the hidden information about themselves. This tool helps those who want:
