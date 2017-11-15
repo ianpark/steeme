@@ -18,6 +18,7 @@ class ControllPanel extends React.Component {
     render() {
         return (
         <div className="form-group">
+            <h3>Steem Insight</h3>
             <div className="input-group input-group-lg" role="group">
                 <span className="input-group-addon" id="sizing-addon1">@</span>
                 <input type="input" className="form-control" id="user_id" placeholder="Steemit ID here" defaultValue={this.state.userId}/>
@@ -690,5 +691,5 @@ class PostingAnalyser extends React.Component {
 
 ReactDOM.render(
     <PostingAnalyser/>,
-    document.getElementById('main_panel')
+    document.getElementById('steem_insight')
 );

@@ -14,7 +14,33 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>        
     </head>
     <body>
-        <div id="main_panel"></div>
+    <div style="background-color: #363636; height:40px">
+            <span style="color:#cccccc;font-size:18pt;margin:5px">Steeme</span>
+        </div>
+        <div class="tabbable tabs-left" style="width: 100%">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#steem_insight" data-toggle="tab">Steem Insight</a>
+                </li>
+                <li>
+                    <a href="#send_sbd_tab" data-toggle="tab">Send SBD</a>
+                </li>
+                <li>
+                    <a href="#delegate_tab" data-toggle="tab">Delegate STEEM POWER</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="steem_insight">
+                        <div id="steem_insight"></div>
+                </div>
+                <div class="tab-pane" id="send_sbd_tab">
+                        <div id="transfer_money_panel"></div>
+                </div>
+                <div class="tab-pane" id="delegate_tab">
+                        <div id="delegate_steem_power"></div>
+                </div>
+            </div>
+        </div>
         <!-- Modal -->
         <div class="modal fade" id="pleaseWaitDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"  data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
@@ -38,12 +64,15 @@
                 </div>
                 </div>
             </div>
-        </div>            
+        </div>   
+        <footer class="footer">
+                <div class="container">
+                  <span class="text-muted">steeme.com | created by @asbear</span>
+                </div>
+              </footer>         
     </body>
 </html>
 
-<script>
-steem.api.setWebSocket('wss://steemd-int.steemit.com');
-</script>
-
-<script type="text/babel" src="./js/main.jsx"></script>
+<script type="text/babel" src="./js/insight.jsx"></script>
+<script type="text/babel" src="./js/split.jsx"></script>
+<script type="text/babel" src="./js/delegate.jsx"></script>
