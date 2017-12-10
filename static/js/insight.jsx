@@ -55,20 +55,35 @@ class PostingDetail extends React.Component {
         var p = this.props.post;
         var vote_list = p.active_votes.map(upvote => [upvote.voter, upvote.sbd]);
         vote_list.sort(function(a, b) { return b[1] - a[1]; });
+        console.log(p);
         return (
             <div>
-                <h3>Voted By</h3>
-                {vote_list.length > 0 ?
-                    vote_list.map((vote, index) =>
-                        <span key={index} className="user_cell"><b>{vote[0]}</b> ${vote[1].toFixed(2)}</span>
-                    ) : (<p>No Comment</p>)
+                { this.props.type == 'raw_content' &&
+                    <div>
+                        <h3>Title</h3>
+                        { p.title }
+                        <h3>Body</h3>
+                        <pre>
+                        { p.body }
+                        </pre>
+                        <h3>Tags</h3>
+                        { JSON.parse(p.json_metadata).tags.join(' ') }
+                    </div>
                 }
-                <h3>Resteemed By</h3>
-                {p.reblogged_by.length > 0 ? 
-                    p.reblogged_by.map((id, index) =>
-                    <span key={index} className="user_cell"><b>{id}</b></span>
-                    ) : (<p>No resteem</p>)
-                }
+                <div>
+                    <h3>Voted By</h3>
+                    {vote_list.length > 0 ?
+                        vote_list.map((vote, index) =>
+                            <span key={index} className="user_cell"><b>{vote[0]}</b> ${vote[1].toFixed(2)}</span>
+                        ) : (<p>No Comment</p>)
+                    }
+                    <h3>Resteemed By</h3>
+                    {p.reblogged_by.length > 0 ? 
+                        p.reblogged_by.map((id, index) =>
+                        <span key={index} className="user_cell"><b>{id}</b></span>
+                        ) : (<p>No resteem</p>)
+                    }
+                </div>
             </div>
         )
     }
@@ -81,7 +96,9 @@ class Posting extends React.Component {
             search_keyword: ''
         }
         this.download = this.download.bind(this);
+        this.textDownload = this.textDownload.bind(this);
         this.detailPopup = this.detailPopup.bind(this);
+        this.rawPopup = this.rawPopup.bind(this);
     }
 
     download() {
@@ -101,14 +118,43 @@ class Posting extends React.Component {
         a.remove();
     }
 
+    textDownload() {
+        var file_name = "data.txt";
+        var type = "data:attachment/text";
+        var data = this.props.posts.map( post => 
+            "Title:\n" + post.title + "\n" +
+            "Created:\n" + post.created + "\n" +
+            "Body:\n" + post.body + "\n\n\n" )
+            .reduce((fulltext, item) => fulltext + item, "");
+
+        if (data != null && navigator.msSaveBlob)
+            return navigator.msSaveBlob(new Blob([data], { type: type }), file_name);
+        var a = $("<a style='display: none;'/>");
+        var url = window.URL.createObjectURL(new Blob([data], {type: type}));
+        a.attr("href", url);
+        a.attr("download", file_name);
+        $("body").append(a);
+        a[0].click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    }
+
     detailPopup(index) {
         ReactDOM.render(
-            <PostingDetail post={this.props.posts[index]}/>,
+            <PostingDetail post={this.props.posts[index]} type='reward' />,
             document.getElementById('show_detail_area')
         );
         $('#show_detail').modal();
     }
     
+    rawPopup(index) {
+        ReactDOM.render(
+            <PostingDetail post={this.props.posts[index]} type='raw_content' />,
+            document.getElementById('show_detail_area')
+        );
+        $('#show_detail').modal();
+    }
+
     handleChange(e) {
         this.setState({ search_keyword: e.target.value });
     }
@@ -123,7 +169,12 @@ class Posting extends React.Component {
         <div className="container" style={{width: '100%'}}>
             <div>
                 <h2>Posting history</h2>
-                <button className="btn btn-success pull-right" onClick={this.download}><span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> JSON</button>
+                <button className="btn btn-success pull-right" onClick={this.download}>
+                    <span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> JSON
+                </button>
+                <button className="btn btn-success pull-right" onClick={this.textDownload}>
+                    <span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Text
+                </button>
                 <div className="form-group pull-right">
                     <div className="input-group input-group" role="group">
                         <input type="input" onChange={ this.handleChange.bind(this) }  value={this.state.search_keyword} size="20" className="form-control" id="search_keyword" placeholder="search keyword"/>
@@ -137,7 +188,10 @@ class Posting extends React.Component {
             <tbody>
                 {posts.map((post ,index) =>
                 <tr key={index}>
-                    <td><a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a></td>
+                    <td>
+                        <a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a>
+                        <button className='btn btn-default btn-rawmodal' onClick={() => this.rawPopup(index)}>Raw</button>
+                    </td>
                     <td className='right link' onClick={() => this.detailPopup(index)}>{post.net_votes}</td>
                     <td className='right'>{post.children}</td>
                     <td className='right link' onClick={() => this.detailPopup(index)}>{post.payout.toFixed(2)}</td>
@@ -521,7 +575,7 @@ class Summary extends React.Component {
     }
 }
 
-var steemme_version = "0.3";
+var steemme_version = "0.4";
 class PostingAnalyser extends React.Component {
     constructor(props) {
       super(props);

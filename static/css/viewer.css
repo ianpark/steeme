@@ -66,6 +66,12 @@ span.receiver-sbd {
     font-weight: 600;
 }
 
+button.btn-rawmodal {
+    font-size: 7pt;
+    margin-left: 5px;
+    padding: 2px;
+}
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
