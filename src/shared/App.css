@@ -1,0 +1,29 @@
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    font-family: sans-serif;
+  }
+  
+  html, .outer {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+  }
+  
+  div .outer {
+    display: table;
+  }
+  
+  div.inner_fixed {
+    height: 100px;
+    background-color: grey;
+    
+    display: table-row;
+  }
+  
+  div.inner_remaining {
+    background-color: #DDDDDD;
+    
+    display: table-row;    
+  }
