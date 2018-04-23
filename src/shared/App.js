@@ -11,7 +11,7 @@ import './App.css';
 const Content = () => (
     <div>
         <Route exact path="/" component={Home} />
-        <Route path="/insight" component={Insight} />
+        <Route path="/insight/:id?" component={Insight} />
     </div>
 );
 
@@ -117,10 +117,9 @@ const NavBarChildren = ({ children }) => (
 
 const slideMenu = [
   { name: 'Home', link: '/', icon: 'home' },
-  { name: 'Payment', link: '/pay', icon: 'payment' },
-  { name: 'Invoice', link: '/invoice', icon: 'tag' },
-  { name: 'Price', link: '/price', icon: 'line chart'},
-  { name: 'Setting', link: '/setting', icon: 'setting' },
+  { name: 'Steem Insight', link: '/insight', icon: 'payment' },
+  { name: 'Steem Splitter', link: '/splitter', icon: 'tag' },
+  { name: 'Steem Power Delegator', link: '/delegator', icon: 'line chart'},
 ];
 
 export default App;

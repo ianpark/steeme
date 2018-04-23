@@ -1,8 +1,12 @@
 import React from 'react';
+import InsightMain from 'components/insight/InsightMain';
+import InsightForm from 'components/insight/InsightForm';
 
-const Insight = () => {
+const Insight = ({match}) => {
     return (
-        <div>Insight</div>
+        <div>
+            {match.params.id ? <InsightMain userId={match.params.id} /> : <InsightForm />}
+        </div>
     )
 };
 
