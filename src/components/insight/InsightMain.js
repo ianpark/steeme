@@ -27,7 +27,7 @@ class InsightMain extends Component {
 
     showResult = () => {
         return (
-            <div className="container" style={{maxWidth: 1000}}>
+            <div className="container" style={{width: '100vw', maxWidth: 1000}}>
                 <div>
                     <Tab menu={{ secondary: true, pointing: true }} panes={this.getPanes()} />
                 </div>

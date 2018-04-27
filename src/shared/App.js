@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Route } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Home, Insight } from 'pages';
+import { Home, Insight, Post } from 'pages';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header, Container } from 'semantic-ui-react';
 import _ from "lodash";
 import Footer from 'components/Footer'
@@ -11,6 +11,7 @@ import './App.css';
 const Content = () => (
     <div>
         <Route exact path="/" component={Home} />
+        <Route path="/post/@:author/:permlink" component={Post} />
         <Route path="/insight/:id?" component={Insight} />
     </div>
 );

@@ -144,7 +144,7 @@ class PostingInfo extends Component {
                     </div>
                 </div>
             </div>
-            <Table compact collapsing="false">
+            <Table compact collapsing="false" style={{width:'100%'}}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Title</Table.HeaderCell>
