@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import { Input, Icon, Button } from 'semantic-ui-react';
-import { Redirect } from 'react-router-dom';
-
+import { Redirect, withRouter } from 'react-router-dom';
 
 class InsightForm extends Component {
     constructor(props) {
@@ -19,10 +18,10 @@ class InsightForm extends Component {
         return (
             <div>
                 { this.state.userId ?
-                <Redirect push to={"./@" + this.state.userId} />
+                <Redirect push to={this.props.location.pathname + "/@" + this.state.userId} />
                 :
                 <div>
-                    Select User
+                    <h2>Steem Insight</h2>
                     <Input size='large' icon='search'  placeholder='Steemit account' onKeyDown={this.keyPress} />
                 </div>
                 }
@@ -31,4 +30,4 @@ class InsightForm extends Component {
     }
 };
 
-export default InsightForm;
+export default withRouter(InsightForm);
