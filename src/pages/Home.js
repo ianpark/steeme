@@ -6,7 +6,7 @@ import PostForm from 'components/PostForm';
 const Home = () => {
     return (
         <div>
-            Not ready ;)
+            <h1>New Steeme is Coming SOOOON! Meanwhile, use <a href="https://ianpark.github.io/steeme/">https://ianpark.github.io/steeme/</a></h1>
             {/*
         <h1>Posting</h1>
         <Grid>
