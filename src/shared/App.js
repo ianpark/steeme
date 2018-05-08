@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Route } from 'react-router';
 import { Link } from 'react-router-dom';
-import { Home, Insight, Post } from 'pages';
+import { Home, Insight, Post, Witness } from 'pages';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header, Container } from 'semantic-ui-react';
 import _ from "lodash";
 import Footer from 'components/Footer'
@@ -12,6 +12,7 @@ const Content = () => (
     <div>
         <Route exact path="/" component={Home} />
         <Route path="/post/@:author/:permlink" component={Post} />
+        <Route path="/witness" component={Witness} />
         <Route path="/insight/:id?" component={Insight} />
     </div>
 );
@@ -118,9 +119,7 @@ const NavBarChildren = ({ children }) => (
 
 const slideMenu = [
   { name: 'Home', link: '/', icon: 'home' },
-  { name: 'Steem Insight', link: '/insight', icon: 'payment' },
-  { name: 'Steem Splitter', link: '/splitter', icon: 'tag' },
-  { name: 'Steem Power Delegator', link: '/delegator', icon: 'line chart'},
+  { name: 'Witness Insight', link: '/witness', icon: 'eye' },
 ];
 
 export default App;

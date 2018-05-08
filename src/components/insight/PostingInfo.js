@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Table, Button, Label, Icon } from 'semantic-ui-react';
+import { Table, Button, Label, Icon, Input } from 'semantic-ui-react';
 
 class PostingDetail extends React.Component {
     constructor(props) {
@@ -118,9 +118,12 @@ class PostingInfo extends Component {
         */
     }
 
-    handleChange(e) {
-        this.setState({ search_keyword: e.target.value });
+    keyPress = (e) => {
+        if (e.keyCode == 13) {
+            this.setState({ search_keyword: e.target.value });
+        }
     }
+
     render() {
         var posts = [];
         if (this.state.search_keyword.length > 0) {
@@ -131,20 +134,10 @@ class PostingInfo extends Component {
         return (
         <div className="container" style={{width: '100%'}}>
             <div>
-                <h2>Posting history</h2>
-                <button className="btn btn-success pull-right" onClick={this.download}>
-                    <span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> JSON
-                </button>
-                <button className="btn btn-success pull-right" onClick={this.textDownload}>
-                    <span className="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Text
-                </button>
-                <div className="form-group pull-right">
-                    <div className="input-group input-group" role="group">
-                        <input type="input" onChange={ this.handleChange.bind(this) }  value={this.state.search_keyword} size="20" className="form-control" id="search_keyword" placeholder="search keyword"/>
-                    </div>
-                </div>
+                <h2>My Blog</h2>
+                <Input size='large' icon='search'  placeholder='keyword' onKeyDown={this.keyPress} />
             </div>
-            <Table compact collapsing="false" style={{width:'100%'}}>
+            <Table style={{minWidth: '700px'}}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Title</Table.HeaderCell>
@@ -159,7 +152,7 @@ class PostingInfo extends Component {
                     {posts.map((post ,index) =>
                     <Table.Row key={index}>
                         <Table.Cell>
-                            <a href={"http://steemit.com/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a>
+                            <a href={"/post/@" + post.author + "/" + post.permlink} target="blank">{post.title}</a>
                             {" "}<Icon name='zoom' onClick={() => this.rawPopup(index)} />
                         </Table.Cell>
                         <Table.Cell onClick={() => this.detailPopup(index)}>{post.net_votes}</Table.Cell>
