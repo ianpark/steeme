@@ -104,7 +104,7 @@ class WitnessDetail extends React.Component {
                 <Table.Cell>{(this.props.witness.votes / 1000000000000).toFixed()}</Table.Cell>
                 <Table.Cell>${this.props.witness.sbd_exchange_rate.base.split(' ')[0]}</Table.Cell>
                 <Table.Cell>{this.props.witness.proxy || '-' }</Table.Cell>
-                <Table.Cell>{this.state.voteTo.length}</Table.Cell>
+                <Table.Cell>{this.props.witness.witness_votes.length}</Table.Cell>
                 <Table.Cell>{voteToTop20.count} ({voteToTop20.ratio.toFixed(0)}%)</Table.Cell>
                 <Table.Cell>{voteFromTop20.count} ({voteFromTop20.ratio.toFixed(0)}%)</Table.Cell>
             </Table.Row>);
