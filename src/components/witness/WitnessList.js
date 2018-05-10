@@ -128,8 +128,8 @@ class WitnessList extends Component {
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
                             <Table.HeaderCell>Witness</Table.HeaderCell>
-                            <Table.HeaderCell>Missed Blocks</Table.HeaderCell>
-                            <Table.HeaderCell>Receiving Votes<br/><sup>(MVests)</sup>
+                            <Table.HeaderCell>Missed<br/>Blocks</Table.HeaderCell>
+                            <Table.HeaderCell>Receiving<br/>Votes<br/><sup>(MVests)</sup>
                                 <Popup trigger={<Icon name='info circle'/>}
                                         content="The total MVests that this witness is receiving"/>
                             </Table.HeaderCell>
