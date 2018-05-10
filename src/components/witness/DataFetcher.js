@@ -20,11 +20,13 @@ class DataFetcher extends Component {
     }
 
     componentDidMount() {
+        //this.props.onData({witnesses: witnessSample, witnessIndex: witnessIndex});
         this.fetchWitnessData();
     }
 
     updateInformation = (account, idx) => {
-        this.witness[idx].proxied_vsf_votes = account.proxied_vsf_votes;
+        this.witness[idx].proxiedVests = account.proxied_vsf_votes.reduce((a, b) => parseInt(a) + parseInt(b)) / 1000000000000;
+        this.witness[idx].vestingShares = account.vesting_shares.split(' ')[0] / 1000000;
         this.witness[idx].witness_votes = account.witness_votes;
         account.witness_votes.forEach((voteTo, idx) => {
             try {
@@ -43,7 +45,7 @@ class DataFetcher extends Component {
                 this.witnessIndex[item.owner] = idx;
                 item.receiving_votes = [];
                 item.witness_votes = [];
-                item.proxied_vsf_votes = [];
+                item.disabled = item.signing_key === "STM1111111111111111111111111111111114T1Anm"
             });
             return steem.api.getAccountsAsync(witnesses.map(a => a.owner))
         })

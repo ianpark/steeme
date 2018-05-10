@@ -6,15 +6,11 @@ class Witness extends Component {
         super(props);
     }
 
-    onData(data) {
-        console.log(JSON.stringify(data));
-    }
-
     render() {
         return (
             <div>
                 <h2>Witness Insight</h2>
-                <WitnessList />
+                <WitnessList account={this.props.match.params.account}/>
             </div>
         );
     }
