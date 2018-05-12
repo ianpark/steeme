@@ -3,8 +3,6 @@ import witnessIndex from 'resources/witness_index_sample.json';
 import React, {Component} from 'react';
 var steem = require('steem');
 
-
-
 class DataFetcher extends Component {
     constructor(props) {
         super(props);
@@ -32,7 +30,7 @@ class DataFetcher extends Component {
             try {
                 this.witness[this.witnessIndex[voteTo]].receiving_votes.push(account.name);
             } catch(err) {
-                console.log(err);
+                //console.log(err);
             }
         });
     }
@@ -51,6 +49,7 @@ class DataFetcher extends Component {
         })
         .then((accounts) => {
             accounts.forEach((account, idx) => {
+                this.witness[idx].accountInfo = account;
                 if (account.proxy) {
                     this.witness[idx].proxy = account.proxy;
                     if (!this.proxyMap[account.proxy]) {
@@ -71,7 +70,6 @@ class DataFetcher extends Component {
                     
                 } else {
                     this.proxyMap[proxy.name].forEach(origin => {
-                        console.log(proxy.name, origin, this.witnessIndex[origin] );
                         this.updateInformation(proxy, this.witnessIndex[origin]);
                     });
                 }

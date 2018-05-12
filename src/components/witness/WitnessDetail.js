@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
-import { Label, Statistic, Segment } from 'semantic-ui-react';
-import {Doughnut, Bar} from 'react-chartjs-2';
+import { Label, Statistic, Message, Divider, Icon, Table } from 'semantic-ui-react';
+import {Doughnut, Bar } from 'react-chartjs-2';
+import { Grid, Image } from 'semantic-ui-react';
 
+const Colors = {
+    top20: '#00ace6',
+    rest: '#bfbfbf',
+    disabled: '#ff8080'
+}
 
 class WitnessDetail extends Component {
     constructor(props) {
@@ -19,10 +25,14 @@ class WitnessDetail extends Component {
 
     isDisabled = (account) => {
         try {
-            return this.props.witnesses[this.props.witnessIndex[account]].disabled;
+            return this.isDisabledByIndex(this.props.witnessIndex[account])
         } catch (error) {
             return false;
         }
+    }
+
+    isDisabledByIndex = (index) => {
+        return this.props.witnesses[index].disabled;
     }
 
     getTopXCount = (items, x) => {
@@ -30,28 +40,39 @@ class WitnessDetail extends Component {
         return {count: voteCount, ratio: voteCount ? (voteCount / items.length * 100) : 0}
     }
 
+
+    witnessVoteWeight = () => {
+        let total = 0;
+        this.state.data.voteFrom.forEach(voter => {
+            total += this.props.witnesses[voter.rank-1].proxiedVests + this.props.witnesses[voter.rank-1].vestingShares;
+        });
+        return total;
+    }
+
     renderVoteList = (vostList) => {
         return vostList.map(x => {
             let isDisabled = this.isDisabled(x.account);
-            return <Label circular color={isDisabled ? 'red': (x.rank <= 20)? 'black': 'grey'} style={{marginBottom: '2px'}}>{x.account}</Label>
+            return <Label style={{
+                    marginBottom: '2px',
+                    color: 'white',
+                    background: isDisabled ? Colors.disabled: (x.rank <= 20)? Colors.top20: Colors.rest}
+            }>{x.account}</Label>
         });
     }
 
     renderVoteChart = (vostList) => {
-        let buckets = new Array(10).fill(0);
-        console.log(vostList);
-        vostList.forEach(vote => buckets[parseInt((vote.rank-1)/10)] += 1)
+        let count = this.props.witnesses.length;
+        let inputData = new Array(count).fill(0);
+        vostList.forEach(vote => inputData[vote.rank-1] = 1)
         const data = {
-            labels: ['1-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70', '71-80', '81-90', '91-100'],
+            labels: [...Array(count).keys()].map(k => k+1),
             datasets: [
               {
                 label: 'Votes to witness',
-                backgroundColor: 'rgba(255,99,132,0.2)',
-                borderColor: 'rgba(255,99,132,1)',
-                borderWidth: 1,
-                hoverBackgroundColor: 'rgba(255,99,132,0.4)',
-                hoverBorderColor: 'rgba(255,99,132,1)',
-                data: buckets
+                backgroundColor: inputData.map((value, key) =>
+                    this.isDisabledByIndex(key) ? Colors.disabled : (key < 20) ? Colors.top20 : Colors.rest),
+                borderWidth: 0,
+                data: inputData
               }
             ]
           };
@@ -59,11 +80,27 @@ class WitnessDetail extends Component {
             maintainAspectRatio: false,
             scales: {
                 yAxes: [{
-                    ticks: {
-                        min: 0,
-                        beginAtZero: true
+                    display: false,
+                }],
+                xAxes: [{
+                    gridLines: {
+                        display:false
                     }
-                }]
+                }],
+            },
+            tooltips: {
+                callbacks: {
+                    title: (arr, data) => {
+                        return "";
+                    },
+                    label: (i, data) => {
+                        let witness = this.props.witnesses[i.index];
+                        return `${witness.owner} (rank:${i.index+1})`;
+                    }
+                }
+            },
+            legend: {
+                display: false
             }
         }
         return <div style={{height: '200px'}}><Bar
@@ -78,97 +115,151 @@ class WitnessDetail extends Component {
             labels: labels,
             datasets: [
               {
-                backgroundColor: [ 'rgb(255, 99, 132)', 'rgb(54, 162, 235)' ],
-                data: input
+                backgroundColor: [ '#00ace6', '#bfbfbf' ],
+                data: input.map(v => v.toFixed(0))
               }
             ]
           };
         const options = {
             maintainAspectRatio: false,
         }
-        return <div style={{height: '250px', width: '250px', display: 'inline-block'}}><Doughnut
+        return <div style={{height: '250px', width: '200px', display: 'inline-block'}}><Doughnut
                 data={data}
                 options={options}
             /></div>
     }
 
+    renderProfile = () => {
+        const data = this.state.data;
+        const account = data.account;
+        const accountData = this.props.witnesses[this.props.witnessIndex[account]];
+        const accountInfo = accountData.accountInfo
+        const profile = accountInfo.json_metadata ? JSON.parse(accountInfo.json_metadata).profile : null;
+
+        return profile ?
+            <Grid>
+                <Grid.Column width={4}>
+                    <Image rounded src={`https://steemitimages.com/0x0/${profile.profile_image}`} verticalAlign='top' />
+                </Grid.Column>
+                <Grid.Column width={9}>
+                    <h1>{profile.name} (@{account})</h1>
+                    <h4>{profile.about}</h4>
+                    <p><Icon name='home'/> {profile.location}</p>
+                    <p><Icon name='linkify'/>{profile.website}</p>
+                </Grid.Column>
+            </Grid>
+            :
+            <Message warning header={`@${account} has no account profile.`}
+                    content='It is not a mandatory thing for a witness to set up their profile, however self-explanatory account profile is a definitely very good way to respect the Steemians.'/>
+    }
+
+    renderWitnessStatus = () => {
+        const data = this.state.data;
+        const account = data.account;
+        const accountData = this.props.witnesses[this.props.witnessIndex[account]];
+        const witnessStatus = [
+            {name: 'Last Block', content: accountData.last_confirmed_block_num},
+            {name: 'Running Version', content: accountData.running_version},
+            {name: 'Signing Key', content: accountData.signing_key},
+            {name: 'Total Missed', content: accountData.total_missed},
+            {name: 'Price Feed', content: accountData.sbd_exchange_rate.base},
+            {name: 'Link', content: accountData.url}
+        ]
+        return (
+            <Table celled striped collapsing>
+                <Table.Header>
+                <Table.Row>
+                    <Table.HeaderCell colSpan='2'>Witness Status</Table.HeaderCell>
+                </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {witnessStatus.map((item, key) =>
+                    <Table.Row key={key}>
+                        <Table.Cell><h4>{item.name}</h4></Table.Cell><Table.Cell>{item.content}</Table.Cell>
+                    </Table.Row>
+                    )}
+                </Table.Body>
+            </Table>
+        )
+    }
+
     render() {
         const data = this.state.data;
+        const voteFromWitnesses = this.witnessVoteWeight();
         return (
             <div>
-                <h3>Witness Votes Cast Trend</h3>
-                {this.renderVotePie(['top 20', 'others'], [data.voteToTop20.count, data.castedVote - data.voteToTop20.count])}
-                {this.renderVotePie(['top 30', 'others'], [data.voteToTop30.count, data.castedVote - data.voteToTop30.count])}
-                <Statistic.Group color="grey">
-                    <Statistic>
-                        <Statistic.Value>{data.castedVote}</Statistic.Value>
-                        <Statistic.Label>Votes Cast</Statistic.Label>
-                    </Statistic>
-                    <Statistic>
-                        <Statistic.Value>{data.voteToTop20.count}</Statistic.Value>
-                        <Statistic.Label>Top 20</Statistic.Label>
-                    </Statistic>
-                    <Statistic>
-                        <Statistic.Value>{data.voteToTop20.ratio.toFixed(0)}%</Statistic.Value>
-                        <Statistic.Label>Top 20</Statistic.Label>
-                    </Statistic>
-                    <Statistic>
-                        <Statistic.Value>{data.voteToTop30.count}</Statistic.Value>
-                        <Statistic.Label>Top 30</Statistic.Label>
-                    </Statistic>
-                    <Statistic>
-                        <Statistic.Value>{data.voteToTop30.ratio.toFixed(0)}%</Statistic.Value>
-                        <Statistic.Label>Top 30</Statistic.Label>
-                    </Statistic>
-                </Statistic.Group>
-
-                <br/>
-                <h3>Witness Votes Cast</h3>
-                {this.renderVoteChart(data.voteTo)}
-                <br/>
-                {this.renderVoteList(data.voteTo)}
-                <br/>
-                <h3>Witness Votes Received (from witnesses)</h3>
-                {this.renderVoteChart(data.voteFrom)}
-                <br/>
-                {this.renderVoteList(data.voteFrom)}
-
+                {this.renderProfile()}
+                <Divider hidden/>
+                <Grid divided='vertically'>
+                    <Grid.Row columns={1}>
+                        <Grid.Column textAlign="center">
+                            {this.renderWitnessStatus()}
+                        </Grid.Column>
+                    </Grid.Row>
+                    <h2>Witness Update</h2>
+                    <Grid.Row columns={1}>
+                        <Grid.Column>To be implemented
+                        </Grid.Column>
+                    </Grid.Row>
+                    <h2>Projects / Activities</h2>
+                    <Grid.Row columns={1}>
+                        <Grid.Column>To be implemented
+                        </Grid.Column>
+                    </Grid.Row>
+                    <h2>Inter-Witness Voting Trend</h2>
+                    <Grid.Row columns={3}>
+                        <Grid.Column textAlign="center">
+                            {this.renderVotePie(['To top 20 witnesses', 'other witnesses'], [data.voteToTop20.count, data.castedVote - data.voteToTop20.count])}<br/>
+                            <Statistic size='tiny' color="grey">
+                                <Statistic.Value>{`${data.voteToTop20.count} / ${data.castedVote}`}</Statistic.Value>
+                                <Statistic.Label>To Top 20 / Total</Statistic.Label>
+                            </Statistic>
+                            <Statistic size='tiny' color="grey">
+                                <Statistic.Value>{data.voteToTop20.ratio.toFixed(0)}%</Statistic.Value>
+                                <Statistic.Label>Percentage</Statistic.Label>
+                            </Statistic>
+                        </Grid.Column>
+                        <Grid.Column textAlign="center">
+                            {this.renderVotePie(['From top 20 witnesses', 'others witnesses'], [data.voteFromTop20.count, data.voteFrom.length - data.voteFromTop20.count])}<br/>
+                            <Statistic size='tiny' color="grey">
+                                <Statistic.Value>{`${data.voteFromTop20.count} / ${data.voteFrom.length}`}</Statistic.Value>
+                                <Statistic.Label>From Top 20 / Total</Statistic.Label>
+                            </Statistic>
+                            <Statistic size='tiny' color="grey">
+                                <Statistic.Value>{data.voteToTop30.ratio.toFixed(0)}%</Statistic.Value>
+                                <Statistic.Label>Percentage</Statistic.Label>
+                            </Statistic>
+                        </Grid.Column>
+                        <Grid.Column textAlign="center">
+                            {this.renderVotePie(['From witnesses', 'From non-witness'], [voteFromWitnesses, data.receivingMVests - voteFromWitnesses])}<br/>
+                            <Statistic  size='mini' color="grey">
+                                <Statistic.Value>{`${voteFromWitnesses.toFixed(0)} / ${data.receivingMVests.toFixed(0)} MVests`}</Statistic.Value>
+                                <Statistic.Label>From Witness / Total </Statistic.Label>
+                            </Statistic>
+                            <Statistic  size='mini' color="grey">
+                                <Statistic.Value>{(voteFromWitnesses/data.receivingMVests*100).toFixed(0)}%</Statistic.Value>
+                                <Statistic.Label>Percentage</Statistic.Label>
+                            </Statistic>
+                        </Grid.Column>
+                    </Grid.Row>
+                    <h2>Witness Votes Cast</h2>
+                    <Grid.Row columns={1}>
+                        <Grid.Column>
+                        {this.renderVoteChart(data.voteTo)}
+                        {this.renderVoteList(data.voteTo)}
+                        </Grid.Column>
+                    </Grid.Row>
+                    <h2>Received Witness Vote from Witnesses</h2>
+                    <Grid.Row columns={1}>
+                        <Grid.Column>
+                        {this.renderVoteChart(data.voteFrom)}
+                        {this.renderVoteList(data.voteFrom)}
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
             </div>
         );
     }
 }
-/*
-    renderRow = (witness) => {
-        let data = this.manipulateData(witness);
-        let voteToWarn = false;
-        let voteTo = data.voteTo.map(x => {
-            let isDisabled = this.isDisabled(x);
-            if (isDisabled) voteToWarn = true;
-            return <Label circular color={isDisabled ? 'red': 'white'} style={{marginBottom: '2px'}}>{x}</Label>
-        });
 
-        let voteFrom = data.voteFrom.map(x => {
-            return <Label circular style={{marginBottom: '2px'}}>{x}</Label>
-        });
-
-        return (
-            <Table.Row style={data.disabled ? {background: '#b05060', color: '#ffffff'} :{}}>
-                <Table.Cell>{data.rank}</Table.Cell>
-                <Table.Cell><a href="#" onClick={() => this.detailView(data.account)}>{data.account}</a></Table.Cell>
-                <Table.Cell>{data.totalMissed}</Table.Cell>
-                <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
-                <Table.Cell>{(data.proxiedVests + data.vestingShares).toFixed(2)}</Table.Cell>
-                <Table.Cell>${data.feedPrice}</Table.Cell>
-                <Table.Cell>{data.proxy}</Table.Cell>
-                <Table.Cell style={voteToWarn ? {background: 'orange', color: '#ffffff'}:{}}>
-                    <Popup wide trigger={<span>{data.castedVote} / {data.voteToTop20.count} ({data.voteToTop20.ratio.toFixed(0)}%)</span>}
-                            content={voteTo}/>
-                </Table.Cell>
-                <Table.Cell>
-                    <Popup wide trigger={<span>{data.voteFrom.length} / {data.voteFromTop20.count} ({data.voteFromTop20.ratio.toFixed(0)}%)</span>}
-                                        content={voteFrom}/>
-                </Table.Cell>
-            </Table.Row>
-        );
-        */
 export default WitnessDetail;

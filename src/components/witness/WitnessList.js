@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {withRouter} from 'react-router';
 import { Segment, Table, Popup, Icon, Loader, Dimmer } from 'semantic-ui-react'
 import { Button, Header, Image, Modal, Container, Label } from 'semantic-ui-react'
 
@@ -78,11 +79,14 @@ class WitnessList extends Component {
 
     onModalClose = () => {
         this.setState({account: null, showDetail: false});
+        this.props.history.push('/witness');
     }
 
     detailView = (account) => {
         let selectedWitness = this.state.witnesses[this.state.witnessIndex[account]]
         this.setState({showDetail: true, selectedWitness: selectedWitness});
+        this.props.history.push(`/witness/${account}`);
+
     }
 
     renderRow = (witness, key) => {
@@ -96,18 +100,18 @@ class WitnessList extends Component {
         return (
             <Table.Row key={key} style={data.disabled ? {background: '#ee6070', color: '#ffffff'} :{}}>
                 <Table.Cell>{data.rank}</Table.Cell>
-                <Table.Cell><a href="#" onClick={() => this.detailView(data.account)}>{data.account}</a></Table.Cell>
+                <Table.Cell>{data.account} <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/></Table.Cell>
                 <Table.Cell>{data.totalMissed}</Table.Cell>
                 <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
                 <Table.Cell>{(data.proxiedVests + data.vestingShares).toFixed(2)}</Table.Cell>
                 <Table.Cell>${data.feedPrice}</Table.Cell>
                 <Table.Cell>{data.proxy}</Table.Cell>
-                {(voteToWarn && !data.disabled) ?
-                    <Popup wide trigger={<Table.Cell style={{background: '#FFBF00'}}>{data.castedVote}</Table.Cell>}
-                    content="Voting to one or more disabled witnesses"/>
-                :
-                    <Table.Cell>{data.castedVote}</Table.Cell>
-                }
+                <Table.Cell>
+                    {data.castedVote}
+                    {voteToWarn &&
+                        <Popup wide trigger={<Icon name="warning sign" color="orange"/>}
+                        content="Voting to one or more disabled witnesses"/>}
+                </Table.Cell>
                 <Table.Cell>{data.receivedVote}</Table.Cell>
             </Table.Row>
         );
@@ -128,7 +132,7 @@ class WitnessList extends Component {
                                         content="The total MVests that this witness is receiving"/>
                             </Table.HeaderCell>
                             <Table.HeaderCell>
-                                Worth of a Vote<br/><sup>(MVests)</sup>
+                                Vote Leverage<br/><sup>(MVests)</sup>
                                 <Popup trigger={<Icon name='info circle'/>}
                                     content="The total MVests the votee will get by a vote from this witness"/>
                             </Table.HeaderCell>
@@ -151,7 +155,7 @@ class WitnessList extends Component {
                 </Table>
                 {this.state.showDetail &&
                 <Modal open={this.state.showDetail} closeOnDimmerClick={true} onClose={this.onModalClose}>
-                    <Modal.Header>@{this.state.selectedWitness ? this.state.selectedWitness.owner : this.props.account}</Modal.Header>
+                    <Modal.Header>Witness Report</Modal.Header>
                     <Modal.Content>
                         {this.state.selectedWitness ?
                             <WitnessDetail data={this.manipulateData(this.state.selectedWitness)}
@@ -167,4 +171,4 @@ class WitnessList extends Component {
     }
 }
 
-export default WitnessList;
+export default withRouter(WitnessList);
