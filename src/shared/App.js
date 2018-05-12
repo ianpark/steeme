@@ -22,14 +22,13 @@ const leftItems = [];
 const rightItems = [];
 
 const App = () => (
+  <div>
     <div>
-      <div>
       <AppFrame rightItems={rightItems}>
-          <Content />
-          <Footer />
+        <Content />
       </AppFrame>
     </div>
-    </div>
+  </div>
 );
 
 class AppFrame extends Component {
@@ -73,7 +72,7 @@ const NavBarMobile = ({
     rightItems,
     visible
   }) => (
-    <Sidebar.Pushable>
+    <div>
       <Sidebar
         as={Menu}
         animation="overlay"
@@ -92,10 +91,7 @@ const NavBarMobile = ({
         ))}
         <Footer/>
       </Sidebar>
-      <Sidebar.Pusher
-        dimmed={visible}
-        onClick={onPusherClick}
-        style={{ minHeight: "100vh" }}>
+      <div onClick={visible ? onToggle : null}>
         <Menu inverted fixed="top">
           <Menu secondary>
           <Menu.Item onClick={onToggle}>
@@ -110,8 +106,8 @@ const NavBarMobile = ({
           </Menu.Menu>
         </Menu>
         {children}
-      </Sidebar.Pusher>
-    </Sidebar.Pushable>
+      </div>
+    </div>
   );
   
 const NavBarChildren = ({ children }) => (

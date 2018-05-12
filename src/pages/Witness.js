@@ -11,6 +11,7 @@ class Witness extends Component {
             <div>
                 <h2>Witness Insight</h2>
                 <WitnessList account={this.props.match.params.account}/>
+                <br/><br/>
             </div>
         );
     }

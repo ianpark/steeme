@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import { Segment, Table, Popup, Icon, Loader, Dimmer } from 'semantic-ui-react'
 import { Button, Header, Image, Modal, Container, Label } from 'semantic-ui-react'
 
+import { Link } from "react-router-dom";
+
 import DataFetcher from './DataFetcher';
 import WitnessDetail from './WitnessDetail';
 
@@ -43,13 +45,10 @@ class WitnessList extends Component {
                 output.push({account: user, rank: rank})
             }
         });
-        return output.sort(function(a,b){return a.rank > b.rank;});
+        return output.sort(function(a,b){return a.rank - b.rank;});
     }
 
-    getTopXCount = (items, x) => {
-        let voteCount = items.filter(item => item.rank <= x).length;
-        return {count: voteCount, ratio: voteCount ? (voteCount / items.length * 100) : 0}
-    }
+
 
     isDisabled = (account) => {
         try {
@@ -60,9 +59,6 @@ class WitnessList extends Component {
     }
 
     manipulateData = (witness) => {
-        let voteFrom = this.filterVote(witness.receiving_votes);
-        let voteTo = this.filterVote(witness.witness_votes);
-
         return {
             rank: this.getRank(witness.owner),
             account: witness.owner,
@@ -71,13 +67,12 @@ class WitnessList extends Component {
             feedPrice: witness.sbd_exchange_rate.base.split(' ')[0],
             proxy: witness.proxy || '-',
             castedVote: witness.witness_votes.length,
-            voteToTop20: this.getTopXCount(voteTo, 20),
-            voteFromTop20: this.getTopXCount(voteFrom, 20),
+            receivedVote: witness.receiving_votes.length,
             vestingShares: witness.vestingShares,
             proxiedVests: witness.proxiedVests,
             disabled: witness.disabled,
-            voteFrom: witness.receiving_votes,
-            voteTo: witness.witness_votes
+            voteFrom: this.filterVote(witness.receiving_votes),
+            voteTo: this.filterVote(witness.witness_votes)
         };
     }
 
@@ -85,36 +80,35 @@ class WitnessList extends Component {
         this.setState({account: null, showDetail: false});
     }
 
-    renderRow = (witness) => {
+    detailView = (account) => {
+        let selectedWitness = this.state.witnesses[this.state.witnessIndex[account]]
+        this.setState({showDetail: true, selectedWitness: selectedWitness});
+    }
+
+    renderRow = (witness, key) => {
         let data = this.manipulateData(witness);
         let voteToWarn = false;
-        let voteTo = data.voteTo.map(x => {
-            let isDisabled = this.isDisabled(x);
+        data.voteTo.forEach(x => {
+            let isDisabled = this.isDisabled(x.account);
             if (isDisabled) voteToWarn = true;
-            return <Label color={isDisabled ? 'red': 'white'} style={{marginBottom: '2px'}}>{x}</Label>
-        });
-
-        let voteFrom = data.voteFrom.map(x => {
-            return <Label style={{marginBottom: '2px'}}>{x}</Label>
         });
 
         return (
-            <Table.Row style={data.disabled ? {background: '#b05060', color: '#ffffff'} :{}}>
+            <Table.Row key={key} style={data.disabled ? {background: '#ee6070', color: '#ffffff'} :{}}>
                 <Table.Cell>{data.rank}</Table.Cell>
-                <Table.Cell>{data.account}</Table.Cell>
+                <Table.Cell><a href="#" onClick={() => this.detailView(data.account)}>{data.account}</a></Table.Cell>
                 <Table.Cell>{data.totalMissed}</Table.Cell>
                 <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
                 <Table.Cell>{(data.proxiedVests + data.vestingShares).toFixed(2)}</Table.Cell>
                 <Table.Cell>${data.feedPrice}</Table.Cell>
                 <Table.Cell>{data.proxy}</Table.Cell>
-                <Table.Cell style={voteToWarn ? {background: 'orange', color: '#ffffff'}:{}}>
-                    <Popup wide trigger={<span>{data.castedVote} / {data.voteToTop20.count} ({data.voteToTop20.ratio.toFixed(0)}%)</span>}
-                            content={voteTo}/>
-                </Table.Cell>
-                <Table.Cell>
-                    <Popup wide trigger={<span>{data.voteFrom.length} / {data.voteFromTop20.count} ({data.voteFromTop20.ratio.toFixed(0)}%)</span>}
-                                        content={voteFrom}/>
-                </Table.Cell>
+                {(voteToWarn && !data.disabled) ?
+                    <Popup wide trigger={<Table.Cell style={{background: '#FFBF00'}}>{data.castedVote}</Table.Cell>}
+                    content="Voting to one or more disabled witnesses"/>
+                :
+                    <Table.Cell>{data.castedVote}</Table.Cell>
+                }
+                <Table.Cell>{data.receivedVote}</Table.Cell>
             </Table.Row>
         );
     }
@@ -123,7 +117,7 @@ class WitnessList extends Component {
         return (
             <Container>
                 <DataFetcher onData={this.onData}/>
-                <Table celled>
+                <Table unstackable compact="very">
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
@@ -143,27 +137,26 @@ class WitnessList extends Component {
                                 <Popup trigger={<Icon name='info circle'/>}
                                             content="The account that this witness set as a proxy. If a proxy is set, voting stat of the witness will be orverridden by proxy's stat."/>
                             </Table.HeaderCell>
-                            <Table.HeaderCell>Vote to Witness<br/>/ To top 20
+                            <Table.HeaderCell>Votes Cast </Table.HeaderCell>
+                            <Table.HeaderCell>Votes Received
                                 <Popup trigger={<Icon name='info circle'/>}
-                                    content="Number of the witness votes casted to the top 20 witnesses"/>
-                            </Table.HeaderCell>
-                            <Table.HeaderCell>Vote from Witness<br/>/ From top 20
-                                <Popup trigger={<Icon name='info circle'/>}
-                                    content="Number of the witness votes received from the top 20 witnesses"/>  
+                                    content="Votes received from the witnesses"/>  
                             </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
-                    <Table.Body>
-                    {this.state.witnesses ? this.state.witnesses.map((witness) => this.renderRow(witness))
+                    
+                    {this.state.witnesses ? <Table.Body>{this.state.witnesses.map((witness, key) => this.renderRow(witness, key))}</Table.Body>
                     : <Dimmer active><Loader>Loading</Loader></Dimmer>}
-                    </Table.Body>
+                    
                 </Table>
                 {this.state.showDetail &&
                 <Modal open={this.state.showDetail} closeOnDimmerClick={true} onClose={this.onModalClose}>
-                    <Modal.Header>Detail</Modal.Header>
+                    <Modal.Header>@{this.state.selectedWitness ? this.state.selectedWitness.owner : this.props.account}</Modal.Header>
                     <Modal.Content>
                         {this.state.selectedWitness ?
-                            <WitnessDetail data={this.manipulateData(this.state.selectedWitness)} />
+                            <WitnessDetail data={this.manipulateData(this.state.selectedWitness)}
+                                            witnessIndex={this.state.witnessIndex}
+                                            witnesses={this.state.witnesses} />
                         :
                         "@" + this.props.account + " is not in the top 100 witnesses."
                         }
