@@ -226,7 +226,7 @@ class WitnessDetail extends Component {
                                 <Statistic.Label>From Top 20 / Total</Statistic.Label>
                             </Statistic>
                             <Statistic size='tiny' color="grey">
-                                <Statistic.Value>{data.voteToTop30.ratio.toFixed(0)}%</Statistic.Value>
+                                <Statistic.Value>{data.voteFromTop20.ratio.toFixed(0)}%</Statistic.Value>
                                 <Statistic.Label>Percentage</Statistic.Label>
                             </Statistic>
                         </Grid.Column>
