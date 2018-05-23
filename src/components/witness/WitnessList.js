@@ -49,15 +49,16 @@ class WitnessList extends Component {
         return output.sort(function(a,b){return a.rank - b.rank;});
     }
 
-
-
-    isDisabled = (account) => {
+    isDisabledForLong = (account) => {
         try {
-            return this.state.witnesses[this.state.witnessIndex[account]].disabled;
+            const witness = this.state.witnesses[this.state.witnessIndex[account]];
+            return witness.disabled && witness.sleepingMins > 1440;
         } catch (error) {
             return false;
         }
     }
+
+    
 
     manipulateData = (witness) => {
         return {
@@ -93,8 +94,7 @@ class WitnessList extends Component {
         let data = this.manipulateData(witness);
         let voteToWarn = false;
         data.voteTo.forEach(x => {
-            let isDisabled = this.isDisabled(x.account);
-            if (isDisabled) voteToWarn = true;
+            if (this.isDisabledForLong(x.account)) voteToWarn = true;
         });
 
         return (

@@ -3,6 +3,10 @@ import witnessIndex from 'resources/witness_index_sample.json';
 import React, {Component} from 'react';
 var steem = require('steem');
 
+const convertToPrice = (price) => {
+    return price.base.split(' ')[0] / price.quote.split(' ')[0];
+}
+
 class DataFetcher extends Component {
     constructor(props) {
         super(props);
@@ -74,12 +78,26 @@ class DataFetcher extends Component {
                     });
                 }
             });
+            return steem.api.getDynamicGlobalPropertiesAsync();
+        })
+        .then((properties) => {
+            this.witness.forEach(witness => {
+                witness.sleepingMins = ((properties.head_block_number - witness.last_confirmed_block_num) * 3) / 60;
+            });
+            return steem.api.getCurrentMedianHistoryPriceAsync();
+        })
+        .then((priceFeed) => {
+            const avgFeed = convertToPrice(priceFeed);
+            this.witness.forEach(witness => {
+                witness.feedBias = (convertToPrice(witness.sbd_exchange_rate) - avgFeed) / avgFeed;
+            })
         })
         .catch((err) => {
             console.log("Failed to fetch witness data");
             console.log(err);
         })
         .done(() => {
+            console.log(this.witness);
             this.props.onData({witnesses: this.witness, witnessIndex: this.witnessIndex});
         });
     }
