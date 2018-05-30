@@ -13,69 +13,20 @@ class WitnessList extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            witnessIndex: null,
-            witnesses: null,
             ready: false,
             showDetail: false,
-            selectedWitness: null
+            selectedWitness: null,
+            witness: null
         }
     }
 
-    onData = ({witnesses, witnessIndex}) => {
-        this.setState({witnesses: witnesses, witnessIndex: witnessIndex},
+    onData = (model) => {
+        this.setState({witness: model},
             () => {
-                let selectedWitness = witnesses[witnessIndex[this.props.account]]
+                let selectedWitness = model.getByAccount(this.props.account);
                 this.setState({showDetail: this.props.account ? true : false,
                 selectedWitness: selectedWitness});
             });
-    }
-
-    getRank(account) {
-        try {
-            return this.state.witnessIndex[account] + 1;
-        } catch (error) {
-            return null;
-        }
-    }
-
-    filterVote(voteList) {
-        let output = [];
-        voteList.map((user) => {
-            let rank = this.getRank(user);
-            if (rank) {
-                output.push({account: user, rank: rank})
-            }
-        });
-        return output.sort(function(a,b){return a.rank - b.rank;});
-    }
-
-    isDisabledForLong = (account) => {
-        try {
-            const witness = this.state.witnesses[this.state.witnessIndex[account]];
-            return witness.disabled && witness.sleepingMins > 1440;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    
-
-    manipulateData = (witness) => {
-        return {
-            rank: this.getRank(witness.owner),
-            account: witness.owner,
-            totalMissed: witness.total_missed,
-            receivingMVests: witness.votes / 1000000000000,
-            feedPrice: witness.sbd_exchange_rate.base.split(' ')[0],
-            proxy: witness.proxy || '-',
-            castedVote: witness.witness_votes.length,
-            receivedVote: witness.receiving_votes.length,
-            vestingShares: witness.vestingShares,
-            proxiedVests: witness.proxiedVests,
-            disabled: witness.disabled,
-            voteFrom: this.filterVote(witness.receiving_votes),
-            voteTo: this.filterVote(witness.witness_votes)
-        };
     }
 
     onModalClose = () => {
@@ -84,33 +35,49 @@ class WitnessList extends Component {
     }
 
     detailView = (account) => {
-        let selectedWitness = this.state.witnesses[this.state.witnessIndex[account]]
+        let selectedWitness = this.state.witness.getByAccount(account);
         this.setState({showDetail: true, selectedWitness: selectedWitness});
         this.props.history.push(`/witness/${account}`);
 
     }
 
     renderRow = (witness, key) => {
-        let data = this.manipulateData(witness);
-        let voteToWarn = false;
-        data.voteTo.forEach(x => {
-            if (this.isDisabledForLong(x.account)) voteToWarn = true;
-        });
-
+        let data = this.state.witness.manipulateData(witness.owner);
+        let state = data.disabled ? (data.disabledForLong ? 'negative' : 'warning') : '';
         return (
-            <Table.Row key={key} style={data.disabled ? {background: '#ee6070', color: '#ffffff'} :{}}>
+            <Table.Row key={key} className={state}>
                 <Table.Cell>{data.rank}</Table.Cell>
-                <Table.Cell>{data.account} <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/></Table.Cell>
+                <Table.Cell>{data.account}
+                <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/>
+                {data.disabled &&
+                        <Popup wide trigger={<Icon name="warning sign" color={state == 'warning' ? 'orange' : 'red'}/>}
+                        content={`Inactive for ${(data.sleepingMins / 60).toFixed(1)} hours`}/>}
+                </Table.Cell>
+                <Table.Cell>{data.version}
+                {data.version < this.state.witness.secureVersion &&
+                    <Popup wide trigger={<Icon name="warning sign" color="yellow"/>}
+                    content={`A version lower than ${this.state.witness.secureVersion} might has a security hole. Note that 0.19.2 with full security patch is equivalant to 0.19.3, but there is no way to tell from the public if patches are applied or not.`}/>}
+                </Table.Cell>
                 <Table.Cell>{data.totalMissed}</Table.Cell>
                 <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
                 <Table.Cell>{(data.proxiedVests + data.vestingShares).toFixed(2)}</Table.Cell>
-                <Table.Cell>${data.feedPrice}</Table.Cell>
+                <Table.Cell>${data.feedPrice}
+                    {Math.abs(data.feedBias) > 100 &&
+                        <Popup wide trigger={<Icon name="warning sign" color="yellow"/>}
+                                content={`Feed is biased ${data.feedBias.toFixed(0)}%`}/>}
+                </Table.Cell>
                 <Table.Cell>{data.proxy}</Table.Cell>
                 <Table.Cell>
                     {data.castedVote}
-                    {voteToWarn &&
-                        <Popup wide trigger={<Icon name="warning sign" color="orange"/>}
-                        content="Voting to one or more disabled witnesses"/>}
+                    {data.votingToInactive.length > 0 &&
+                        <Popup wide trigger={<Icon name="heartbeat" color="orange"/>}
+                        content={`Voting to witnesses who are inactive for more than ${this.state.witness.maxInactiveDay} days: ${data.votingToInactive.join(', ')} `}/>}
+                    {data.votingToBiasedFeed.length > 0 &&
+                        <Popup wide trigger={<Icon name="low vision" color="yellow"/>}
+                        content={`Voting to witnesses whose feed is biased over 100%: ${data.votingToBiasedFeed.join(', ')} `}/>}
+                    {data.votingToInsecureVer.length > 0 &&
+                        <Popup wide trigger={<Icon name="warning sign" color="red"/>}
+                        content={`Voting to witnesses whose version is lower than ${this.state.witness.semiSecureVersion} : ${data.votingToInsecureVer.join(', ')} `}/>}
                 </Table.Cell>
                 <Table.Cell>{data.receivedVote}</Table.Cell>
             </Table.Row>
@@ -126,6 +93,7 @@ class WitnessList extends Component {
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
                             <Table.HeaderCell>Witness</Table.HeaderCell>
+                            <Table.HeaderCell>Version</Table.HeaderCell>
                             <Table.HeaderCell>Missed<br/>Blocks</Table.HeaderCell>
                             <Table.HeaderCell>Receiving<br/>Votes<br/><sup>(MVests)</sup>
                                 <Popup trigger={<Icon name='info circle'/>}
@@ -149,7 +117,7 @@ class WitnessList extends Component {
                         </Table.Row>
                     </Table.Header>
                     
-                    {this.state.witnesses ? <Table.Body>{this.state.witnesses.map((witness, key) => this.renderRow(witness, key))}</Table.Body>
+                    {this.state.witness ? <Table.Body>{this.state.witness.witness.map((witness, key) => this.renderRow(witness, key))}</Table.Body>
                     : <Dimmer active><Loader>Loading</Loader></Dimmer>}
                     
                 </Table>
@@ -158,9 +126,8 @@ class WitnessList extends Component {
                     <Modal.Header>Witness Report</Modal.Header>
                     <Modal.Content>
                         {this.state.selectedWitness ?
-                            <WitnessDetail data={this.manipulateData(this.state.selectedWitness)}
-                                            witnessIndex={this.state.witnessIndex}
-                                            witnesses={this.state.witnesses} />
+                            <WitnessDetail account={this.state.selectedWitness.owner}
+                                            witness={this.state.witness} />
                         :
                         "@" + this.props.account + " is not in the top 100 witnesses."
                         }

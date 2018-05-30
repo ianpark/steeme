@@ -1,7 +1,9 @@
 import witnessSample from 'resources/witness_sample.json';
 import witnessIndex from 'resources/witness_index_sample.json';
 import React, {Component} from 'react';
-var steem = require('steem');
+let steem = require('steem');
+let witnessModel = require('./WitnessModel');
+
 
 const convertToPrice = (price) => {
     return price.base.split(' ')[0] / price.quote.split(' ')[0];
@@ -88,8 +90,13 @@ class DataFetcher extends Component {
         })
         .then((priceFeed) => {
             const avgFeed = convertToPrice(priceFeed);
+            console.log(avgFeed);
             this.witness.forEach(witness => {
-                witness.feedBias = (convertToPrice(witness.sbd_exchange_rate) - avgFeed) / avgFeed;
+                witness.priceFeed = convertToPrice(witness.sbd_exchange_rate);
+                let delta = witness.priceFeed - avgFeed;
+                if (delta < 0) delta = delta * 2;
+
+                witness.feedBias = (delta / avgFeed) * 100;
             })
         })
         .catch((err) => {
@@ -97,8 +104,8 @@ class DataFetcher extends Component {
             console.log(err);
         })
         .done(() => {
-            console.log(this.witness);
-            this.props.onData({witnesses: this.witness, witnessIndex: this.witnessIndex});
+            witnessModel.buildInitialData(this.witness, this.witnessIndex);
+            this.props.onData(witnessModel);
         });
     }
 

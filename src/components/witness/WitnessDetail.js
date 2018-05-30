@@ -12,46 +12,28 @@ const Colors = {
 class WitnessDetail extends Component {
     constructor(props) {
         super(props);
+        let data = this.props.witness.manipulateData(this.props.account);
         this.state = {
             data: {
-                ...this.props.data, 
-                voteToTop20: this.getTopXCount(this.props.data.voteTo, 20),
-                voteFromTop20: this.getTopXCount(this.props.data.voteFrom, 20),
-                voteToTop30: this.getTopXCount(this.props.data.voteTo, 30),
-                voteFromTop30: this.getTopXCount(this.props.data.voteFrom, 30)
+                ...data, 
+                voteToTop20: this.getTopXCount(data.voteTo, 20),
+                voteFromTop20: this.getTopXCount(data.voteFrom, 20),
+                voteToTop30: this.getTopXCount(data.voteTo, 30),
+                voteFromTop30: this.getTopXCount(data.voteFrom, 30)
             }
         };
     }
 
-    isDisabled = (account) => {
-        try {
-            return this.isDisabledByIndex(this.props.witnessIndex[account])
-        } catch (error) {
-            return false;
-        }
-    }
 
-    isDisabledByIndex = (index) => {
-        return this.props.witnesses[index].disabled;
-    }
 
     getTopXCount = (items, x) => {
         let voteCount = items.filter(item => item.rank <= x).length;
         return {count: voteCount, ratio: voteCount ? (voteCount / items.length * 100) : 0}
     }
 
-
-    witnessVoteWeight = () => {
-        let total = 0;
-        this.state.data.voteFrom.forEach(voter => {
-            total += this.props.witnesses[voter.rank-1].proxiedVests + this.props.witnesses[voter.rank-1].vestingShares;
-        });
-        return total;
-    }
-
     renderVoteList = (vostList) => {
         return vostList.map(x => {
-            let isDisabled = this.isDisabled(x.account);
+            let isDisabled = this.props.witness.isDisabled(x.account);
             return <Label style={{
                     marginBottom: '2px',
                     color: 'white',
@@ -61,7 +43,7 @@ class WitnessDetail extends Component {
     }
 
     renderVoteChart = (vostList) => {
-        let count = this.props.witnesses.length;
+        let count = this.props.witness.getCount();
         let inputData = new Array(count).fill(0);
         vostList.forEach(vote => inputData[vote.rank-1] = 1)
         const data = {
@@ -70,7 +52,7 @@ class WitnessDetail extends Component {
               {
                 label: 'Votes to witness',
                 backgroundColor: inputData.map((value, key) =>
-                    this.isDisabledByIndex(key) ? Colors.disabled : (key < 20) ? Colors.top20 : Colors.rest),
+                    this.props.witness.isDisabledByIndex(key) ? Colors.disabled : (key < 20) ? Colors.top20 : Colors.rest),
                 borderWidth: 0,
                 data: inputData
               }
@@ -94,8 +76,8 @@ class WitnessDetail extends Component {
                         return "";
                     },
                     label: (i, data) => {
-                        let witness = this.props.witnesses[i.index];
-                        return `${witness.owner} (rank:${i.index+1})`;
+                        let owner = this.props.witness.getAccountByIndex(i.index);
+                        return `${owner} (rank:${i.index+1})`;
                     }
                 }
             },
@@ -132,7 +114,7 @@ class WitnessDetail extends Component {
     renderProfile = () => {
         const data = this.state.data;
         const account = data.account;
-        const accountData = this.props.witnesses[this.props.witnessIndex[account]];
+        const accountData = this.props.witness.getByAccount(account);
         const accountInfo = accountData.accountInfo
         const profile = accountInfo.json_metadata ? JSON.parse(accountInfo.json_metadata).profile : null;
 
@@ -156,7 +138,7 @@ class WitnessDetail extends Component {
     renderWitnessStatus = () => {
         const data = this.state.data;
         const account = data.account;
-        const accountData = this.props.witnesses[this.props.witnessIndex[account]];
+        const accountData = this.props.witness.getByAccount(account);
         const witnessStatus = [
             {name: 'Last Block', content: accountData.last_confirmed_block_num},
             {name: 'Running Version', content: accountData.running_version},
@@ -185,7 +167,7 @@ class WitnessDetail extends Component {
 
     render() {
         const data = this.state.data;
-        const voteFromWitnesses = this.witnessVoteWeight();
+        const voteFromWitnesses = data.totalVoteFromWitnesses;
         return (
             <div>
                 {this.renderProfile()}
