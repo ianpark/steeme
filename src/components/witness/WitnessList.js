@@ -47,8 +47,7 @@ class WitnessList extends Component {
         return (
             <Table.Row key={key} className={state}>
                 <Table.Cell>{data.rank}</Table.Cell>
-                <Table.Cell>{data.account}
-                <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/>
+                <Table.Cell><a href={`https://steemdb.com/@${data.account}/witness`} target="_blank">{data.account}</a>              <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/>
                 {data.disabled &&
                         <Popup wide trigger={<Icon name="warning sign" color={state == 'warning' ? 'orange' : 'red'}/>}
                         content={`Inactive for ${(data.sleepingMins / 60).toFixed(1)} hours`}/>}
@@ -56,7 +55,7 @@ class WitnessList extends Component {
                 <Table.Cell>{data.version}
                 {data.version < this.state.witness.secureVersion &&
                     <Popup wide trigger={<Icon name="warning sign" color="yellow"/>}
-                    content={`A version lower than ${this.state.witness.secureVersion} might has a security hole. Note that 0.19.2 with full security patch is equivalant to 0.19.3, but there is no way to tell from the public if patches are applied or not.`}/>}
+                    content={`A version lower than ${this.state.witness.secureVersion} might have a security hole. Note that ${this.state.witness.semiSecureVersion} with full security patch is equivalant to 0.19.3, but there is no way to tell from the public if patches are applied or not.`}/>}
                 </Table.Cell>
                 <Table.Cell>{data.totalMissed}</Table.Cell>
                 <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
@@ -71,7 +70,7 @@ class WitnessList extends Component {
                     {data.castedVote}
                     {data.votingToInactive.length > 0 &&
                         <Popup wide trigger={<Icon name="heartbeat" color="orange"/>}
-                        content={`Voting to witnesses who are inactive for more than ${this.state.witness.maxInactiveDay} days: ${data.votingToInactive.join(', ')} `}/>}
+                        content={`Voting to witnesses who have been inactive for more than ${this.state.witness.maxInactiveDay} days: ${data.votingToInactive.join(', ')} `}/>}
                     {data.votingToBiasedFeed.length > 0 &&
                         <Popup wide trigger={<Icon name="low vision" color="yellow"/>}
                         content={`Voting to witnesses whose feed is biased over 100%: ${data.votingToBiasedFeed.join(', ')} `}/>}
