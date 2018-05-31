@@ -144,7 +144,7 @@ class WitnessDetail extends Component {
             {name: 'Running Version', content: accountData.running_version},
             {name: 'Signing Key', content: accountData.signing_key},
             {name: 'Total Missed', content: accountData.total_missed},
-            {name: 'Price Feed', content: accountData.sbd_exchange_rate.base},
+            {name: 'Price Feed', content: `$${accountData.priceFeed.toFixed(3)} derived from ${JSON.stringify(accountData.sbd_exchange_rate)}`},
             {name: 'Link', content: accountData.url}
         ]
         return (
