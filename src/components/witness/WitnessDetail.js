@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
-import { Label, Statistic, Message, Divider, Icon, Table } from 'semantic-ui-react';
+import { Label, Statistic, Message, Divider, Icon, Table, Img, Segment } from 'semantic-ui-react';
 import {Doughnut, Bar } from 'react-chartjs-2';
 import { Grid, Image } from 'semantic-ui-react';
+import paragraph from'./paragraph.png';
+
+let steem = require('steem');
 
 const Colors = {
     top20: '#00ace6',
     rest: '#bfbfbf',
     disabled: '#ff8080'
+}
+
+let oneMonthEarlier = () => {
+    var d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d.toJSON().substring(0,19);
 }
 
 class WitnessDetail extends Component {
@@ -20,15 +29,63 @@ class WitnessDetail extends Component {
                 voteFromTop20: this.getTopXCount(data.voteFrom, 20),
                 voteToTop30: this.getTopXCount(data.voteTo, 30),
                 voteFromTop30: this.getTopXCount(data.voteFrom, 30)
-            }
+            },
+            articles: null
         };
+
+        this.witnessUpdates = [];
+        this.witnessCategory = [];
+        this.lastItem = null;
     }
 
+    componentDidMount() {
+        this.collectWitnessUpdate();
+    }
 
+    getRealAccount = () => {
+
+    }
+
+    collectWitnessUpdate = () => {
+        const READSIZE = 15;
+        let permLink = this.lastItem ? this.lastItem.permlink : '';
+        let timeStamp = '2030-01-01T00:00:00';
+        steem.api.getDiscussionsByAuthorBeforeDateAsync(this.props.account, permLink, timeStamp, READSIZE)
+        .then(result => {
+            for (let i = this.lastItem ? 1 : 0 ; i < result.length ; ++i) {
+                let item = result[i];
+                if (item.created < oneMonthEarlier()) break;
+
+                let title = item.root_title.toLowerCase();
+                if (title.includes('witness') && (title.includes('update') || title.includes('log'))) {
+                    this.witnessUpdates.push(item);
+                } else {
+                    // collect witness-category articles except for witness upates
+                    let json_metadata = JSON.parse(item.json_metadata);
+                    if (json_metadata.tags.includes('witness-category')) {
+                        this.witnessCategory.push(item);
+                    }
+                }
+            };
+            this.lastItem = result[result.length-1];
+            if (result.length < READSIZE || this.lastItem.created < oneMonthEarlier()) {
+                // Collected all
+                this.setState(
+                    {articles: {witnessUpdate: this.witnessUpdates, witnessCategory: this.witnessCategory}});
+            } else {
+                this.collectWitnessUpdate();
+            }
+        });
+    }
 
     getTopXCount = (items, x) => {
         let voteCount = items.filter(item => item.rank <= x).length;
         return {count: voteCount, ratio: voteCount ? (voteCount / items.length * 100) : 0}
+    }
+
+
+    renderSteemitLink = (permlink, title) => {
+        return <a href={`https://steemit.com/@${this.props.account}/${permlink}`} target="_blank">{title}</a>
     }
 
     renderVoteList = (vostList) => {
@@ -165,6 +222,42 @@ class WitnessDetail extends Component {
         )
     }
 
+    renderWitnessUpdate = () => {
+        if (!this.state.articles) {
+            return <Segment loading><Image src={paragraph} /></Segment>
+        }
+
+        let witnessUpdate = this.state.articles.witnessUpdate;
+        let witnessCategory = this.state.articles.witnessCategory;
+        return <Segment.Group>
+                <Segment><h3>Witness updates for the last one month</h3></Segment>
+                <Segment.Group>
+                    { witnessUpdate.length > 0 ? witnessUpdate.map(item =>
+                    <Segment>
+                        <Label>{item.created.split('T')[0]}</Label> {" "}
+                        {this.renderSteemitLink(item.permlink, item.title)}
+                    </Segment>)
+                    :
+                    <Message negative>
+                        <Message.Header>No witness update</Message.Header>
+                        <p>Witnesses are expected to regularly update their witness status.</p>
+                    </Message>}
+                </Segment.Group>
+                <Segment><h3>Other articles in the witness-category tag for the last one month</h3></Segment>
+                <Segment.Group>
+                    { witnessCategory.length > 0 ? witnessCategory.map(item =>
+                    <Segment>
+                        <Label>{item.created.split('T')[0]}</Label> {" "}
+                        {this.renderSteemitLink(item.permlink, item.title)}
+                    </Segment>)
+                    :
+                    <Message warning>
+                        <Message.Header>No article</Message.Header>
+                    </Message>}
+                </Segment.Group>
+            </Segment.Group>
+    }
+
     render() {
         const data = this.state.data;
         const voteFromWitnesses = data.totalVoteFromWitnesses;
@@ -178,10 +271,9 @@ class WitnessDetail extends Component {
                             {this.renderWitnessStatus()}
                         </Grid.Column>
                     </Grid.Row>
-                    <h2>Witness Update</h2>
+                    <h2>Witness Updates / Articles</h2>
                     <Grid.Row columns={1}>
-                        <Grid.Column>To be implemented
-                        </Grid.Column>
+                        <Grid.Column>{this.renderWitnessUpdate()}</Grid.Column>
                     </Grid.Row>
                     <h2>Projects / Activities</h2>
                     <Grid.Row columns={1}>
