@@ -1,12 +1,15 @@
 import React, {Component} from 'react';
 import {withRouter} from 'react-router';
 import { Segment, Table, Popup, Icon, Loader, Dimmer } from 'semantic-ui-react'
-import { Button, Header, Image, Modal, Container, Label } from 'semantic-ui-react'
+import { Button, Header, Image, Modal, Container, Label, Form } from 'semantic-ui-react'
 
 import { Link } from "react-router-dom";
 
 import DataFetcher from './DataFetcher';
 import WitnessDetail from './WitnessDetail';
+
+let steem = require('steem');
+
 
 
 class WitnessList extends Component {
@@ -16,7 +19,8 @@ class WitnessList extends Component {
             ready: false,
             showDetail: false,
             selectedWitness: null,
-            witness: null
+            witness: null,
+            userFilter: null,
         }
     }
 
@@ -41,7 +45,49 @@ class WitnessList extends Component {
 
     }
 
+    applyFilter = (e) => {
+        if (e.key === 'Enter') {
+            console.log(e.target.value);
+            let account = e.target.value;
+            steem.api.getAccountsAsync([account])
+            .then((result) => {
+                this.setState({userFilter: {user: account, votes: result[0].witness_votes, proxy: result[0].proxy}}) 
+            })
+            .catch((error) => {
+                window.alert("Failed to get " + account);
+            });
+        }
+    }
+
+    renderWhoHasMyVote = () => {
+        if (this.state.userFilter) {
+            if (this.state.userFilter.votes.length > 0) {
+                return <h4>{this.state.userFilter.user} voted to {this.state.userFilter.votes.length} witnesses {" "}
+                <Button size='tiny' color='green' onClick={() => this.setState({userFilter: null})}>Reset</Button>
+                </h4>
+            } else if (this.state.userFilter.proxy) {
+                return <h4>{this.state.userFilter.user} set {this.state.userFilter.proxy} as a proxy {" "}
+                <Button size='tiny' color='green' onClick={() => this.setState({userFilter: null})}>Remove</Button>
+                </h4>
+            } else {
+                return <h4>{this.state.userFilter.user} made no witness vote nor proxy</h4>
+            }
+        } else {
+            return <Form>
+                        <Form.Field inline>
+                            <input type='text' placeholder='Steemit account' onKeyPress={this.applyFilter} />
+                            <Label pointing='left'>Only show the witnesses who have your vote</Label>
+                        </Form.Field>
+                    </Form>
+        }
+    }
+
     renderRow = (witness, key) => {
+        if (this.state.userFilter) {
+            if (!this.state.userFilter.votes.includes(witness.owner)) {
+                return null;
+            }
+        }
         let data = this.state.witness.manipulateData(witness.owner);
         let state = data.disabled ? (data.disabledForLong ? 'negative' : 'warning') : '';
         return (
@@ -86,6 +132,7 @@ class WitnessList extends Component {
     render() {
         return (
             <Container>
+                {this.renderWhoHasMyVote()}
                 <DataFetcher onData={this.onData}/>
                 <Table unstackable compact="very">
                     <Table.Header>
@@ -109,14 +156,14 @@ class WitnessList extends Component {
                                             content="The account that this witness set as a proxy. If a proxy is set, voting stat of the witness will be orverridden by proxy's stat."/>
                             </Table.HeaderCell>
                             <Table.HeaderCell>Votes Cast </Table.HeaderCell>
-                            <Table.HeaderCell>Votes Received
+                            <Table.HeaderCell>Votes<br/>Received
                                 <Popup trigger={<Icon name='info circle'/>}
                                     content="Votes received from the witnesses"/>  
                             </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     {this.state.witness ? <Table.Body>{this.state.witness.witness.map((witness, key) => this.renderRow(witness, key))}</Table.Body>
-                    : <Dimmer active><Loader>Loading</Loader></Dimmer>}
+                    : <Table.Body><Table.Row><Table.Cell><Dimmer active><Loader>Loading</Loader></Dimmer></Table.Cell></Table.Row></Table.Body>}
                     
                 </Table>
                 <Segment inverted>

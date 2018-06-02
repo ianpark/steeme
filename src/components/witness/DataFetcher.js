@@ -1,6 +1,4 @@
-import witnessSample from 'resources/witness_sample.json';
-import witnessIndex from 'resources/witness_index_sample.json';
-import React, {Component} from 'react';
+import {Component} from 'react';
 let steem = require('steem');
 let witnessModel = require('./WitnessModel');
 
@@ -90,7 +88,6 @@ class DataFetcher extends Component {
         })
         .then((priceFeed) => {
             const avgFeed = convertToPrice(priceFeed);
-            console.log(avgFeed);
             this.witness.forEach(witness => {
                 witness.priceFeed = convertToPrice(witness.sbd_exchange_rate);
                 let delta = witness.priceFeed - avgFeed;

@@ -30,7 +30,8 @@ class WitnessDetail extends Component {
                 voteToTop30: this.getTopXCount(data.voteTo, 30),
                 voteFromTop30: this.getTopXCount(data.voteFrom, 30)
             },
-            articles: null
+            articles: null,
+
         };
 
         this.witnessUpdates = [];
@@ -39,18 +40,30 @@ class WitnessDetail extends Component {
     }
 
     componentDidMount() {
-        this.collectWitnessUpdate();
+        this.collectWitnessUpdate(this.getWitnessOwner());
     }
 
-    getRealAccount = () => {
-
+    getWitnessDetail = () => {
+        const data = this.state.data;
+        const account = data.account;
+        const jsonMetadata = this.props.witness.getJsonMetadata(account);
+        return jsonMetadata.witness;
     }
 
-    collectWitnessUpdate = () => {
+    getWitnessOwner = () => {
+        let witnessDetail = this.getWitnessDetail();
+        let owner = this.props.account;
+        if (witnessDetail && witnessDetail.owner) {
+            owner = witnessDetail.owner;
+        }
+        return owner;
+    }
+
+    collectWitnessUpdate = (updatingUser) => {
         const READSIZE = 15;
         let permLink = this.lastItem ? this.lastItem.permlink : '';
         let timeStamp = '2030-01-01T00:00:00';
-        steem.api.getDiscussionsByAuthorBeforeDateAsync(this.props.account, permLink, timeStamp, READSIZE)
+        steem.api.getDiscussionsByAuthorBeforeDateAsync(updatingUser, permLink, timeStamp, READSIZE)
         .then(result => {
             for (let i = this.lastItem ? 1 : 0 ; i < result.length ; ++i) {
                 let item = result[i];
@@ -73,7 +86,7 @@ class WitnessDetail extends Component {
                 this.setState(
                     {articles: {witnessUpdate: this.witnessUpdates, witnessCategory: this.witnessCategory}});
             } else {
-                this.collectWitnessUpdate();
+                this.collectWitnessUpdate(updatingUser);
             }
         });
     }
@@ -192,11 +205,7 @@ class WitnessDetail extends Component {
     }
 
     renderWitnessProjects = () => {
-        const data = this.state.data;
-        const account = data.account;
-        const jsonMetadata = this.props.witness.getJsonMetadata(account);
-        const witnessDetail = jsonMetadata.witness;
-
+        const witnessDetail = this.getWitnessDetail();
         return witnessDetail && witnessDetail.projects ?
             <Table celled striped collapsing>
                 <Table.Body>
@@ -259,7 +268,7 @@ class WitnessDetail extends Component {
         let witnessUpdate = this.state.articles.witnessUpdate;
         let witnessCategory = this.state.articles.witnessCategory;
         return <Segment.Group>
-                <Segment><h3>Witness updates for the last one month</h3></Segment>
+                <Segment><h3>Witness updates</h3></Segment>
                 <Segment.Group>
                     { witnessUpdate.length > 0 ? witnessUpdate.map(item =>
                     <Segment>
@@ -272,7 +281,7 @@ class WitnessDetail extends Component {
                         <p>Witnesses are expected to regularly update their witness status.</p>
                     </Message>}
                 </Segment.Group>
-                <Segment><h3>Other articles in the witness-category tag for the last one month</h3></Segment>
+                <Segment><h3>Other articles in the witness-category tag</h3></Segment>
                 <Segment.Group>
                     { witnessCategory.length > 0 ? witnessCategory.map(item =>
                     <Segment>
@@ -300,7 +309,7 @@ class WitnessDetail extends Component {
                             {this.renderWitnessStatus()}
                         </Grid.Column>
                     </Grid.Row>
-                    <h2>Witness Updates / Articles</h2>
+                    <h2>Witness Updates / Articles (for the last one month)</h2>
                     <Grid.Row columns={1}>
                         <Grid.Column>{this.renderWitnessUpdate()}</Grid.Column>
                     </Grid.Row>

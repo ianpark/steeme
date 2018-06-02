@@ -1,5 +1,3 @@
-'use strict';
-
 var WitnessModel = {
     semiSecureVersion: '0.19.2',
     secureVersion: '0.19.3',

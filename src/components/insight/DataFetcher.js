@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import {Component} from 'react';
 import testJson from './test.json';
 
 class DataFetcher extends Component {
