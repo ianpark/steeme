@@ -3,7 +3,12 @@ import json
 
 witness_account = 'ned.witness'
 witness_account_active_key = '??'
+
+# Witness update and other witness-category articles will be retrived from this account
 owner_account = 'ned'
+
+# Any Google Map recognizable locations (city, country) of your witness nodes
+nodes_location = ["London, UK", "Newyork, US"]
 
 witness_profile = {
     "owner": owner_account,
@@ -24,7 +29,7 @@ witness_profile = {
             "link": "https://steemit.com/utopian-io/@asbear/transparency-wins-witness-insight-v0-3-1"
         }
     ],
-    "nodes_locations": ["us-east-2"]
+    "nodes_locations": nodes_location
 }
 
 s = Steem(keys=[witness_account_active_key])

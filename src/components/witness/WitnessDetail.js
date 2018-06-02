@@ -216,6 +216,7 @@ class WitnessDetail extends Component {
                 <Message.Header>What is this?</Message.Header>
                 <Message.Content>
                     Project information can be retrived from the custom field in json_metadata of your witness account.
+                    The json format and the sample code is <a href="https://github.com/ianpark/steeme/blob/master/misc/witness_profile_updator.py">here</a>.
                 </Message.Content>
             </Message>
     }
