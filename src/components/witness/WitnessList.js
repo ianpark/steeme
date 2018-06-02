@@ -115,11 +115,13 @@ class WitnessList extends Component {
                             </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
-                    
                     {this.state.witness ? <Table.Body>{this.state.witness.witness.map((witness, key) => this.renderRow(witness, key))}</Table.Body>
                     : <Dimmer active><Loader>Loading</Loader></Dimmer>}
                     
                 </Table>
+                <Segment inverted>
+                        Created by @asbear
+                </Segment>
                 {this.state.showDetail &&
                 <Modal open={this.state.showDetail} closeOnDimmerClick={true} onClose={this.onModalClose}>
                     <Modal.Header>Witness Report</Modal.Header>

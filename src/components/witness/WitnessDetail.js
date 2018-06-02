@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Label, Statistic, Message, Divider, Icon, Table, Img, Segment } from 'semantic-ui-react';
+import { Label, Statistic, Message, Divider, Icon, Table, Img, Segment, Popup, Button } from 'semantic-ui-react';
 import {Doughnut, Bar } from 'react-chartjs-2';
 import { Grid, Image } from 'semantic-ui-react';
 import paragraph from'./paragraph.png';
@@ -171,9 +171,8 @@ class WitnessDetail extends Component {
     renderProfile = () => {
         const data = this.state.data;
         const account = data.account;
-        const accountData = this.props.witness.getByAccount(account);
-        const accountInfo = accountData.accountInfo
-        const profile = accountInfo.json_metadata ? JSON.parse(accountInfo.json_metadata).profile : null;
+        const jsonMetadata = this.props.witness.getJsonMetadata(account);
+        const profile = jsonMetadata.profile;
 
         return profile ?
             <Grid>
@@ -190,6 +189,35 @@ class WitnessDetail extends Component {
             :
             <Message warning header={`@${account} has no account profile.`}
                     content='It is not a mandatory thing for a witness to set up their profile, however self-explanatory account profile is a definitely very good way to respect the Steemians.'/>
+    }
+
+    renderWitnessProjects = () => {
+        const data = this.state.data;
+        const account = data.account;
+        const jsonMetadata = this.props.witness.getJsonMetadata(account);
+        const witnessDetail = jsonMetadata.witness;
+
+        return witnessDetail && witnessDetail.projects ?
+            <Table celled striped collapsing>
+                <Table.Body>
+                    {witnessDetail.projects.map((item, key) =>
+                    <Table.Row key={key}>
+                        <Table.Cell><h4>{item.name}</h4></Table.Cell>
+                        <Table.Cell>
+                            <p>{item.description}</p>
+                            <a href={item.link} target="_blank">{item.link}</a>
+                        </Table.Cell>
+                    </Table.Row>
+                    )}
+                </Table.Body>
+            </Table>
+            :
+            <Message>
+                <Message.Header>What is this?</Message.Header>
+                <Message.Content>
+                    Project information can be retrived from the custom field in json_metadata of your witness account.
+                </Message.Content>
+            </Message>
     }
 
     renderWitnessStatus = () => {
@@ -277,8 +305,7 @@ class WitnessDetail extends Component {
                     </Grid.Row>
                     <h2>Projects / Activities</h2>
                     <Grid.Row columns={1}>
-                        <Grid.Column>To be implemented
-                        </Grid.Column>
+                        <Grid.Column>{this.renderWitnessProjects()}</Grid.Column>
                     </Grid.Row>
                     <h2>Inter-Witness Voting Trend</h2>
                     <Grid.Row columns={3}>

@@ -32,6 +32,11 @@ var WitnessModel = {
         let self = WitnessModel;
         return self.witness[self.witnessIndex[account]];
     },
+    getJsonMetadata: (account) => {
+        let self = WitnessModel;
+        let jsonMetadata = self.getByAccount(account).accountInfo.json_metadata;
+        return jsonMetadata ? JSON.parse(jsonMetadata) : {}
+    },
     getCount: () => {
         return WitnessModel.witness.length;
     },
