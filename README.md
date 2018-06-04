@@ -10,7 +10,6 @@ Steem Insight and Steemian Health Check are still developed and serviced from th
 
 ---
 
-# Witness Insight
 # Witness Insight 1.0
 This tool is designed and implemented to help Steemians, investers as well as the Steem witnesses to overview the current status of the top 100 witnesses. There are many other tools that are providing similar features, but the tools are not focusing on the following requirements.
 
