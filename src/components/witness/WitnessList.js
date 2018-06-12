@@ -97,6 +97,9 @@ class WitnessList extends Component {
                 {data.disabled &&
                         <Popup wide trigger={<Icon name="warning sign" color={state == 'warning' ? 'orange' : 'red'}/>}
                         content={`Inactive for ${(data.sleepingMins / 60).toFixed(1)} hours`}/>}
+                {data.jsonMetadata.witness && 
+                        <Popup wide trigger={<Icon name="bullhorn" color="green"/>}
+                        content={"Witness detail registered"}/>}
                 </Table.Cell>
                 <Table.Cell>{data.version}
                 {data.version < this.state.witness.secureVersion &&

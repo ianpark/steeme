@@ -23,6 +23,7 @@ var WitnessModel = {
             one.voteFrom.forEach(voter => {
                 one.totalVoteFromWitnesses += self.witness[voter.rank-1].proxiedVests + self.witness[voter.rank-1].vestingShares;
             });
+            one.jsonMetadata = one.accountInfo.json_metadata ? JSON.parse(one.accountInfo.json_metadata) : {}
         });
 
     },
@@ -113,7 +114,8 @@ var WitnessModel = {
             votingToBiasedFeed: witness.votingToBiasedFeed,
             votingToInsecureVer: witness.votingToInsecureVer,
             totalVoteFromWitnesses: witness.totalVoteFromWitnesses,
-            version: witness.running_version
+            version: witness.running_version,
+            jsonMetadata: witness.jsonMetadata
         };
 
         return summary; 

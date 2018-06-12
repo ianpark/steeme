@@ -9,7 +9,7 @@ class Witness extends Component {
     render() {
         return (
             <div>
-                <h2>Witness Insight v1.0</h2>
+                <h2>Witness Insight v1.0.1</h2>
                 <WitnessList account={this.props.match.params.account}/>
                 <br/><br/>
             </div>
