@@ -52,7 +52,7 @@ var WitnessModel = {
     },
     isBiasedFeed: (account) => {
         let self = WitnessModel;
-        return Math.abs(self.getByAccount(account).feedBias) > 100;
+        return Math.abs(self.getByAccount(account).feedBias) > 200;
     },
     isInsecureVer: (account) => {
         let self = WitnessModel;

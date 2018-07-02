@@ -21,6 +21,16 @@ class WitnessList extends Component {
             selectedWitness: null,
             witness: null,
             userFilter: null,
+            witnessVotePopup: false,
+            witnessVoteUrl: false,
+        }
+    }
+
+    componentDidMount() {
+        // Set filter
+        let userFilter = localStorage.getItem('userAccount');
+        if (userFilter) {
+            this.applyFilterForUser(userFilter);
         }
     }
 
@@ -47,27 +57,35 @@ class WitnessList extends Component {
 
     applyFilter = (e) => {
         if (e.key === 'Enter') {
-            console.log(e.target.value);
-            let account = e.target.value;
-            steem.api.getAccountsAsync([account])
-            .then((result) => {
-                this.setState({userFilter: {user: account, votes: result[0].witness_votes, proxy: result[0].proxy}}) 
-            })
-            .catch((error) => {
-                window.alert("Failed to get " + account);
-            });
+            localStorage.setItem('userAccount', e.target.value);
+            this.applyFilterForUser(e.target.value)
         }
+    }
+
+    applyFilterForUser = (account) => {
+        steem.api.getAccountsAsync([account])
+        .then((result) => {
+            this.setState({userFilter: {user: account, votes: result[0].witness_votes, proxy: result[0].proxy}}) 
+        })
+        .catch((error) => {
+            window.alert("Failed to get " + account);
+        });
+    }
+
+    clearFilter = () => {
+        this.setState({userFilter: null})
+        localStorage.removeItem('userAccount');
     }
 
     renderWhoHasMyVote = () => {
         if (this.state.userFilter) {
             if (this.state.userFilter.votes.length > 0) {
                 return <h4>{this.state.userFilter.user} voted to {this.state.userFilter.votes.length} witnesses {" "}
-                <Button size='tiny' color='green' onClick={() => this.setState({userFilter: null})}>Reset</Button>
+                <Button size='tiny' color='green' onClick={this.clearFilter}>Clear</Button>
                 </h4>
             } else if (this.state.userFilter.proxy) {
                 return <h4>{this.state.userFilter.user} set {this.state.userFilter.proxy} as a proxy {" "}
-                <Button size='tiny' color='green' onClick={() => this.setState({userFilter: null})}>Remove</Button>
+                <Button size='tiny' color='green' onClick={this.clearFilter}>Clear</Button>
                 </h4>
             } else {
                 return <h4>{this.state.userFilter.user} made no witness vote nor proxy</h4>
@@ -76,16 +94,31 @@ class WitnessList extends Component {
             return <Form>
                         <Form.Field inline>
                             <input type='text' placeholder='Steemit account' onKeyPress={this.applyFilter} />
-                            <Label pointing='left'>Only show the witnesses who have your vote</Label>
+                            <Label pointing='left'>Advanced view for a specific account!</Label>
                         </Form.Field>
                     </Form>
         }
     }
 
+    renderStarCol = (account, starred) => {
+        let tooltip = starred ? "Unvote" : "Vote";
+        let witnessVoteLink = `https://v2.steemconnect.com/sign/account-witness-vote?witness=${account}&approve=${starred?0:1}`;
+        let starIcon = <Icon name="star" size="large" 
+                        style={{color: starred ? "#F4D03F" : "#E5E7E9", cursor: 'pointer'}}
+                        onClick={() => {
+                            window.open(witnessVoteLink, "_blank");
+                        }}/>
+
+        let popup = <Popup wide trigger={starIcon} content={tooltip}/>
+        return <Table.Cell>{popup}</Table.Cell>
+    }
+
     renderRow = (witness, key) => {
-        if (this.state.userFilter) {
-            if (!this.state.userFilter.votes.includes(witness.owner)) {
-                return null;
+        let showStar = this.state.userFilter ? true : false
+        let starred = false;
+        if (showStar) {
+            if (this.state.userFilter.votes.includes(witness.owner)) {
+                starred = true;
             }
         }
         let data = this.state.witness.manipulateData(witness.owner);
@@ -93,6 +126,7 @@ class WitnessList extends Component {
         return (
             <Table.Row key={key} className={state}>
                 <Table.Cell>{data.rank}</Table.Cell>
+                {showStar && this.renderStarCol(data.account, starred)}
                 <Table.Cell><a href={`https://steemdb.com/@${data.account}/witness`} target="_blank">{data.account}</a>              <Icon name="search" link color="blue" onClick={() => this.detailView(data.account)} style={{cursor: 'pointer'}}/>
                 {data.disabled &&
                         <Popup wide trigger={<Icon name="warning sign" color={state == 'warning' ? 'orange' : 'red'}/>}
@@ -120,9 +154,6 @@ class WitnessList extends Component {
                     {data.votingToInactive.length > 0 &&
                         <Popup wide trigger={<Icon name="heartbeat" color="orange"/>}
                         content={`Voting to witnesses who have been inactive for more than ${this.state.witness.maxInactiveDay} days: ${data.votingToInactive.join(', ')} `}/>}
-                    {data.votingToBiasedFeed.length > 0 &&
-                        <Popup wide trigger={<Icon name="low vision" color="yellow"/>}
-                        content={`Voting to witnesses whose feed is biased over 100%: ${data.votingToBiasedFeed.join(', ')} `}/>}
                     {data.votingToInsecureVer.length > 0 &&
                         <Popup wide trigger={<Icon name="warning sign" color="red"/>}
                         content={`Voting to witnesses whose version is lower than ${this.state.witness.semiSecureVersion} : ${data.votingToInsecureVer.join(', ')} `}/>}
@@ -141,6 +172,7 @@ class WitnessList extends Component {
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
+                            {this.state.userFilter && <Table.HeaderCell></Table.HeaderCell>}
                             <Table.HeaderCell>Witness</Table.HeaderCell>
                             <Table.HeaderCell>Version</Table.HeaderCell>
                             <Table.HeaderCell>Missed<br/>Blocks</Table.HeaderCell>
@@ -158,7 +190,7 @@ class WitnessList extends Component {
                                 <Popup trigger={<Icon name='info circle'/>}
                                             content="The account that this witness set as a proxy. If a proxy is set, voting stat of the witness will be orverridden by proxy's stat."/>
                             </Table.HeaderCell>
-                            <Table.HeaderCell>Votes Cast </Table.HeaderCell>
+                            <Table.HeaderCell>Votes<br/>Cast </Table.HeaderCell>
                             <Table.HeaderCell>Votes<br/>Received
                                 <Popup trigger={<Icon name='info circle'/>}
                                     content="Votes received from the witnesses"/>  
