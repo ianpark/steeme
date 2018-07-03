@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 
 import DataFetcher from './DataFetcher';
 import WitnessDetail from './WitnessDetail';
+import { isSecureVersion } from './Utils';
 
 let steem = require('steem');
 
@@ -136,9 +137,9 @@ class WitnessList extends Component {
                         content={"Witness detail registered"}/>}
                 </Table.Cell>
                 <Table.Cell>{data.version}
-                {data.version < this.state.witness.secureVersion &&
-                    <Popup wide trigger={<Icon name="warning sign" color="yellow"/>}
-                    content={`A version lower than ${this.state.witness.secureVersion} might have a security hole. Note that ${this.state.witness.semiSecureVersion} with full security patch is equivalant to 0.19.3, but there is no way to tell from the public if patches are applied or not.`}/>}
+                {!isSecureVersion(data.version) &&
+                    <Popup wide trigger={<Icon name="warning sign" color="red"/>}
+                    content={`A version lower than ${this.state.witness.secureVersion} is not safe.`}/>}
                 </Table.Cell>
                 <Table.Cell>{data.totalMissed}</Table.Cell>
                 <Table.Cell>{data.receivingMVests.toFixed(0)}</Table.Cell>
@@ -155,7 +156,7 @@ class WitnessList extends Component {
                         <Popup wide trigger={<Icon name="heartbeat" color="orange"/>}
                         content={`Voting to witnesses who have been inactive for more than ${this.state.witness.maxInactiveDay} days: ${data.votingToInactive.join(', ')} `}/>}
                     {data.votingToInsecureVer.length > 0 &&
-                        <Popup wide trigger={<Icon name="warning sign" color="red"/>}
+                        <Popup wide trigger={<Icon name="warning sign" color="orange"/>}
                         content={`Voting to witnesses whose version is lower than ${this.state.witness.semiSecureVersion} : ${data.votingToInsecureVer.join(', ')} `}/>}
                 </Table.Cell>
                 <Table.Cell>{data.receivedVote}</Table.Cell>

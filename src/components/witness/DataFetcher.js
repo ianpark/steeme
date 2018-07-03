@@ -1,6 +1,7 @@
 import {Component} from 'react';
+import witnessModel from './WitnessModel';
+
 let steem = require('steem');
-let witnessModel = require('./WitnessModel');
 
 
 const convertToPrice = (price) => {
@@ -26,9 +27,12 @@ class DataFetcher extends Component {
         this.fetchWitnessData();
     }
 
-    updateInformation = (account, idx) => {
+    updateVoteLeverage = (account, idx) => {
         this.witness[idx].proxiedVests = account.proxied_vsf_votes.reduce((a, b) => parseInt(a) + parseInt(b)) / 1000000000000;
         this.witness[idx].vestingShares = account.vesting_shares.split(' ')[0] / 1000000;
+    }
+
+    updateInformation = (account, idx, isProxy) => {
         this.witness[idx].witness_votes = account.witness_votes;
         account.witness_votes.forEach((voteTo, idx) => {
             try {
@@ -63,6 +67,7 @@ class DataFetcher extends Component {
                 } else {
                     this.updateInformation(account, idx);
                 }
+                this.updateVoteLeverage(account, idx);
             });
             let proxies = Object.keys(this.proxyMap);
             return steem.api.getAccountsAsync(proxies);

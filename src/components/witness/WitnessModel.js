@@ -1,6 +1,8 @@
-var WitnessModel = {
-    semiSecureVersion: '0.19.2',
-    secureVersion: '0.19.3',
+import { isSecureVersion } from "./Utils"
+
+let WitnessModel = {
+    semiSecureVersion: '0.19.5',
+    secureVersion: '0.19.5',
     maxInactiveDay: 5,
     witness: {},
     witnessIndex: {},
@@ -56,7 +58,7 @@ var WitnessModel = {
     },
     isInsecureVer: (account) => {
         let self = WitnessModel;
-        return self.getByAccount(account).running_version < self.semiSecureVersion;
+        return !isSecureVersion(self.getByAccount(account).running_version);
     },
     isDisabledForLong: (account) => {
         let self = WitnessModel;
@@ -122,4 +124,4 @@ var WitnessModel = {
     }
 };
 
-module.exports = WitnessModel;
+export default WitnessModel;
